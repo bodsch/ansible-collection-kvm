@@ -1,0 +1,34 @@
+---
+
+# - name: create sysconf directory
+#   ansible.builtin.file:
+#     state: directory
+#     path: "{{ libvirt_defaults_directory }}"
+#     mode: u=rw,g=r,o=r
+#
+# - name: create system libvirtd config
+#   become: true
+#   ansible.builtin.template:
+#     src: "{{ libvirt_defaults_directory[1:] }}/libvirtd.j2"
+#     dest: "{{ libvirt_defaults_directory }}/libvirtd"
+#     owner: root
+#     group: root
+#     mode: u=rw,g=r,o=r
+#     backup: true
+#   notify:
+#     - restart {{ libvirt_service.name }}
+
+- name: configure modular services
+  ansible.builtin.include_tasks: configure/modular.yml
+  when:
+    - not ansible_check_mode
+    - ansible_service_mgr | lower == "systemd"
+
+
+
+
+- name: configure storage pools
+  ansible.builtin.include_tasks: configure/libvirt_storage_pools.yml
+  when:
+    - libvirt_storage_pools is defined
+    - libvirt_storage_pools | default([]) | count > 0

@@ -1,0 +1,8 @@
+
+###################################################################
+# Open vSwitch:
+#
+{% if values.ovs_timeout is defined and
+      values.ovs_timeout | string | length > 0 %}
+ovs_timeout               = {{ values.ovs_timeout | int }}
+{% endif %}

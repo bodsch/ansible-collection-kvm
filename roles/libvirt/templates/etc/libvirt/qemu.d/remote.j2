@@ -1,0 +1,41 @@
+
+{% if libvirt_qemu.remote is defined and
+      libvirt_qemu.remote | count > 0 %}
+  {% if libvirt_qemu.remote.display_port_min is defined and
+        libvirt_qemu.remote.display_port_min | string | length > 0 %}
+remote_display_port_min       = {{ libvirt_qemu.remote.display_port_min }}
+  {% endif %}
+  {% if libvirt_qemu.remote.display_port_max is defined and
+        libvirt_qemu.remote.display_port_max | string | length > 0 %}
+remote_display_port_max       = {{ libvirt_qemu.remote.display_port_max }}
+  {% endif %}
+  {% if libvirt_qemu.remote.websocket_port_min is defined and
+        libvirt_qemu.remote.websocket_port_min | string | length > 0 %}
+remote_websocket_port_min     = {{ libvirt_qemu.remote.websocket_port_min }}
+  {% endif %}
+  {% if libvirt_qemu.remote.websocket_port_max is defined and
+        libvirt_qemu.remote.websocket_port_max | string | length > 0 %}
+remote_websocket_port_max     = {{ libvirt_qemu.remote.websocket_port_max }}
+  {% endif %}
+{% endif %}
+{#
+# Override the port for creating both VNC and SPICE sessions (min).
+# This defaults to 5900 and increases for consecutive sessions
+# or when ports are occupied, until it hits the maximum.
+#
+# Minimum must be greater than or equal to 5900 as lower number would
+# result into negative vnc display number.
+#
+# Maximum must be less than 65536, because higher numbers do not make
+# sense as a port number.
+#
+#remote_display_port_min = 5900
+#remote_display_port_max = 65535
+
+# VNC WebSocket port policies, same rules apply as with remote display
+# ports.  VNC WebSockets use similar display <-> port mappings, with
+# the exception being that ports start from 5700 instead of 5900.
+#
+#remote_websocket_port_min = 5700
+#remote_websocket_port_max = 65535
+#}

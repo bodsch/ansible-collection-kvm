@@ -1,0 +1,13 @@
+---
+
+vm_libvirt:
+  uri: "qemu:///system"
+  pool: "default"
+  network: "vm-network"
+
+vm_autostart_vms: true
+
+vm_graphics:
+  type: "spice"
+
+...

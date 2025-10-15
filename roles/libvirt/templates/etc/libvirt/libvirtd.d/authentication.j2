@@ -1,0 +1,27 @@
+
+#################################################################
+#
+# Authentication.
+#
+{% if values.auth_unix_ro is defined and
+      values.auth_unix_ro | string | length > 0 and
+      values.auth_unix_ro in ["none","sasl","polkit"] %}
+auth_unix_ro              = "{{ values.auth_unix_ro }}"
+{% endif %}
+{% if values.auth_unix_rw is defined and
+      values.auth_unix_rw | string | length > 0 and
+      values.auth_unix_rw in ["none","sasl","polkit"] %}
+auth_unix_rw              = "{{ values.auth_unix_rw }}"
+{% endif %}
+{% if values.auth_tcp is defined and
+      values.auth_tcp | string | length > 0 %}
+auth_tcp                  = "{{ values.auth_tcp }}"
+{% endif %}
+{% if values.auth_tls is defined and
+      values.auth_tls | string | length > 0 %}
+auth_tls                  = "{{ values.auth_tls }}"
+{% endif %}
+{% if values.access_drivers is defined and
+      values.access_drivers | count > 0 %}
+access_drivers            = [ "{{ values.access_drivers | join(",") }}" ]
+{% endif %}

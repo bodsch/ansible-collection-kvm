@@ -1,0 +1,169 @@
+---
+
+- name: daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+    force: true
+  notify: restart alertmanager
+  when:
+    - ansible_service_mgr == 'systemd'
+
+# - name: restart libvirtd-tcp.socket
+#   become: true
+#   ansible.builtin.service:
+#     name: libvirtd-tcp.socket
+#     state: "{{ 'restarted' if libvirt_libvirtd.enable_tcp else 'stopped' }}"
+#   when:
+#     - libvirt_libvirtd.enable_tcp
+#     - not ansible_check_mode
+#
+# - name: restart libvirtd-tls.socket
+#   become: true
+#   ansible.builtin.service:
+#     name: libvirtd-tls.socket
+#     state: "{{ 'restarted' if libvirt_libvirtd.enable_tls else 'stopped' }}"
+#   when:
+#     - libvirt_libvirtd.enable_tls
+#     - not ansible_check_mode
+#
+# - name: restart libvirtd
+#   become: true
+#   ansible.builtin.service:
+#     name: libvirtd
+#     state: restarted
+#     enabled: true
+#   when:
+#     - not ansible_check_mode
+
+# ---------------------------------------------------------------------------------------
+
+- name: restart virtchd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtchd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.ch.socket.enabled | default('false') | bool
+
+- name: restart virtinterfaced.socket
+  become: true
+  ansible.builtin.service:
+    name: virtinterfaced.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.interface.socket.enabled | default('false') | bool
+
+- name: restart virtlockd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtlockd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.lock.socket.enabled | default('false') | bool
+
+- name: restart virtlogd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtlogd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.log.socket.enabled | default('false') | bool
+
+- name: restart virtlxcd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtlxcd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.lxc.socket.enabled | default('false') | bool
+
+- name: restart virtnetworkd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtnetworkd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.network.socket.enabled | default('false') | bool
+
+- name: restart virtnodedevd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtnodedevd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.nodedev.socket.enabled | default('false') | bool
+
+- name: restart virtnwfilterd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtnwfilterd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.nwfilter.socket.enabled | default('false') | bool
+
+- name: restart virtproxyd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtproxyd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.proxy.socket.enabled | default('false') | bool
+
+- name: restart virtqemud.socket
+  become: true
+  ansible.builtin.service:
+    name: virtqemud.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.qemu.socket.enabled | default('false') | bool
+
+- name: restart virtsecretd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtsecretd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.secret.socket.enabled | default('false') | bool
+
+- name: restart virtstoraged.socket
+  become: true
+  ansible.builtin.service:
+    name: virtstoraged.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.storage.socket.enabled | default('false') | bool
+
+- name: restart virtvboxd.socket
+  become: true
+  ansible.builtin.service:
+    name: virtvboxd.socket
+    state: restarted
+  when:
+    - not ansible_check_mode
+    - libvirt_services.vbox.socket.enabled | default('false') | bool
+
+# ---------------------------------------------------------------------------------------
+
+- name: wait for running libvirtd
+  ansible.builtin.wait_for:
+    path: /run/libvirtd.pid
+    state: present
+    delay: 10
+    timeout: 60
+    msg: Timeout to find file /run/libvirtd.pid
+  when:
+    - not ansible_check_mode
+
+...

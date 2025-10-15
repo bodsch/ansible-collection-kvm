@@ -1,0 +1,15 @@
+---
+
+libvirt_dependecies:
+  - iproute2
+  - python3-lxml
+
+libvirt_packages:
+  - libvirt-daemon
+  - libvirt-daemon-system
+  - libvirt-dbus
+  - python3-libvirt
+  - python3-dbus
+  # - qemu
+
+...

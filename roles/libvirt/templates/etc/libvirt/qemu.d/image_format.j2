@@ -1,0 +1,49 @@
+
+{% if libvirt_qemu.image_format is defined and
+      libvirt_qemu.image_format | count > 0 %}
+  {# "raw", "lzop", "gzip", "bzip2", or "xz" #}
+  {% set _attr = ["raw", "lzop", "gzip", "bzip2", "xz"] %}
+  {% if libvirt_qemu.image_format.save_image_format is defined and
+        libvirt_qemu.image_format.save_image_format | string | length > 0 and
+        libvirt_qemu.image_format.save_image_format in _attr %}
+save_image_format             = "{{ libvirt_qemu.image_format.save_image_format }}"
+  {% endif %}
+  {% if libvirt_qemu.image_format.dump_image_format is defined and
+        libvirt_qemu.image_format.dump_image_format | string | length > 0 and
+        libvirt_qemu.image_format.dump_image_format in _attr %}
+dump_image_format             = "{{ libvirt_qemu.image_format.dump_image_format }}"
+  {% endif %}
+  {% if libvirt_qemu.image_format.snapshot_image_format is defined and
+        libvirt_qemu.image_format.snapshot_image_format | string | length > 0 and
+        libvirt_qemu.image_format.snapshot_image_format in _attr %}
+snapshot_image_format         = "{{ libvirt_qemu.image_format.snapshot_image_format }}"
+  {% endif %}
+{% endif %}
+{#
+# The default format for QEMU/KVM guest save images is raw; that is, the
+# memory from the domain is dumped out directly to a file.  If you have
+# guests with a large amount of memory, however, this can take up quite
+# a bit of space.  If you would like to compress the images while they
+# are being saved to disk, you can also set "lzop", "gzip", "bzip2", or "xz"
+# for save_image_format.  Note that this means you slow down the process of
+# saving a domain in order to save disk space; the list above is in descending
+# order by performance and ascending order by compression ratio.
+#
+# save_image_format is used when you use 'virsh save' or 'virsh managedsave'
+# at scheduled saving, and it is an error if the specified save_image_format
+# is not valid, or the requested compression program can't be found.
+#
+# dump_image_format is used when you use 'virsh dump' at emergency
+# crashdump, and if the specified dump_image_format is not valid, or
+# the requested compression program can't be found, this falls
+# back to "raw" compression.
+#
+# snapshot_image_format specifies the compression algorithm of the memory save
+# image when an external snapshot of a domain is taken. This does not apply
+# on disk image format. It is an error if the specified format isn't valid,
+# or the requested compression program can't be found.
+#
+#save_image_format = "raw"
+#dump_image_format = "raw"
+#snapshot_image_format = "raw"
+#}

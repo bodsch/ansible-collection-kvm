@@ -1,0 +1,43 @@
+
+{% if libvirt_qemu.vnc is defined and
+      libvirt_qemu.vnc | count > 0 %}
+  {% if libvirt_qemu.vnc.listen is defined and
+        libvirt_qemu.vnc.listen | string | length > 0 %}
+vnc_listen                    = "{{ libvirt_qemu.vnc.listen }}"
+  {% endif %}
+  {% if libvirt_qemu.vnc.auto_unix_socket is defined and
+        libvirt_qemu.vnc.auto_unix_socket | string | length > 0 %}
+vnc_auto_unix_socket          = {{  libvirt_qemu.vnc.auto_unix_socket | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.vnc.tls is defined and
+        libvirt_qemu.vnc.tls | string | length > 0 %}
+vnc_tls                       = {{  libvirt_qemu.vnc.tls | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.vnc.tls_x509_cert_dir is defined and
+        libvirt_qemu.vnc.tls_x509_cert_dir | string | length > 0 %}
+vnc_tls_x509_cert_dir         = "{{ libvirt_qemu.vnc.tls_x509_cert_dir }}"
+  {% endif %}
+  {% if libvirt_qemu.vnc.tls_x509_secret_uuid is defined and
+        libvirt_qemu.vnc.tls_x509_secret_uuid | string | length > 0 %}
+vnc_tls_x509_secret_uuid      = "{{ libvirt_qemu.vnc.tls_x509_secret_uuid }}"
+  {% endif %}
+  {% if libvirt_qemu.vnc.tls_x509_verify is defined %}
+vnc_tls_x509_verify           = {{  libvirt_qemu.vnc.tls_x509_verify | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.vnc.password is defined and
+        libvirt_qemu.vnc.password | string | length > 0 %}
+vnc_password                  = "{{ libvirt_qemu.vnc.password }}"
+  {% endif %}
+  {% if libvirt_qemu.vnc.sasl is defined and
+        libvirt_qemu.vnc.sasl | string | length > 0 %}
+vnc_sasl                      = {{  libvirt_qemu.vnc.sasl | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.vnc.sasl_dir is defined and
+        libvirt_qemu.vnc.sasl_dir | string | length > 0 %}
+vnc_sasl_dir                  = "{{ libvirt_qemu.vnc.sasl_dir }}"
+  {% endif %}
+  {% if libvirt_qemu.vnc.allow_host_audio is defined and
+        libvirt_qemu.vnc.allow_host_audio | string | length > 0 %}
+vnc_allow_host_audio          = {{  libvirt_qemu.vnc.allow_host_audio | bool | ternary('1', '0') }}
+  {% endif %}
+{% endif %}

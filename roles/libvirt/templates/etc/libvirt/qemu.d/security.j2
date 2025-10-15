@@ -1,0 +1,16 @@
+
+{% if libvirt_qemu.security.drivers is defined and
+      libvirt_qemu.security.drivers | count > 0 and
+      libvirt_qemu.security.drivers | bodsch.kvm.security_drivers(["selinux","apparmor"]) %}
+security_driver               = [ "{{ libvirt_qemu.security.drivers | join('", "') }}" ]
+{% else %}
+security_driver               = "none"
+{% endif %}
+{% if libvirt_qemu.security.default_confined is defined and
+      libvirt_qemu.security.default_confined | string | length > 0 %}
+security_default_confined     = {{ libvirt_qemu.security.default_confined | bool | ternary('1', '0') }}
+{% endif %}
+{% if libvirt_qemu.security.require_confined is defined and
+      libvirt_qemu.security.require_confined | string | length > 0 %}
+security_require_confined     = {{ libvirt_qemu.security.require_confined | bool | ternary('1', '0') }}
+{% endif %}

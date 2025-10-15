@@ -1,0 +1,68 @@
+---
+
+# - name: merge libvirt config configuration between defaults and custom
+#   ansible.builtin.set_fact:
+#     libvirt_libvirtd: "{{ libvirt_defaults_libvirtd | combine(libvirt_libvirtd, recursive=True) }}"
+#     libvirt_qemu: "{{ libvirt_defaults_qemu | combine(libvirt_qemu, recursive=True) }}"
+#     libvirt_network: "{{ libvirt_defaults_network | combine(libvirt_network, recursive=True) }}"
+
+- name: create sysconf directory
+  ansible.builtin.file:
+    state: directory
+    path: "{{ libvirt_defaults_directory }}"
+    mode: u=rw,g=r,o=r
+
+- name: create system libvirtd config
+  become: true
+  ansible.builtin.template:
+    src: "{{ libvirt_defaults_directory[1:] }}/libvirtd.j2"
+    dest: "{{ libvirt_defaults_directory }}/libvirtd"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart {{ libvirt_service.name }}
+
+# TODO
+# move to own role
+# - name: create qemu.conf
+#   become: true
+#   ansible.builtin.template:
+#     src: etc/libvirt/qemu.conf.j2
+#     dest: /etc/libvirt/qemu.conf
+#     owner: root
+#     group: root
+#     mode: u=rw,g=r,o=r
+#     backup: true
+#   notify:
+#     - restart {{ libvirt_service.name }}
+
+# -------------------------------------------------------------------
+
+- name: configure modular services
+  ansible.builtin.include_tasks: configure/modular.yml
+  when:
+    - not ansible_check_mode
+    - ansible_service_mgr | lower == "systemd"
+
+# -------------------------------------------------------------------
+
+# - name: merge libvirt config configuration between defaults and custom
+#   ansible.builtin.set_fact:
+#     libvirt_qemu: "{{ libvirt_defaults_qemu | combine(libvirt_qemu, recursive=True) }}"
+#     libvirt_network: "{{ libvirt_defaults_network | combine(libvirt_network, recursive=True) }}"
+#
+# - name: configure networks
+#   ansible.builtin.include_tasks: configure/libvirt_networks.yml
+#   when:
+#     - libvirt_virtual_networks is defined
+#     - libvirt_virtual_networks | count > 0
+#
+# - name: configure storage pools
+#   ansible.builtin.include_tasks: configure/libvirt_storage_pools.yml
+#   when:
+#     - libvirt_storage_pools is defined
+#     - libvirt_storage_pools | count > 0
+
+...

@@ -1,0 +1,16 @@
+
+{% if libvirt_qemu.default is defined and
+      libvirt_qemu.default | count > 0 %}
+  {% if libvirt_qemu.default.tls_x509_cert_dir is defined and
+        libvirt_qemu.default.tls_x509_cert_dir |string | length > 0 %}
+default_tls_x509_cert_dir     = "{{ libvirt_qemu.default.tls_x509_cert_dir }}"
+  {% endif %}
+  {% if libvirt_qemu.default.tls_x509_verify is defined and
+        libvirt_qemu.default.tls_x509_verify |string | length > 0 %}
+default_tls_x509_verify       = {{ libvirt_qemu.default.tls_x509_verify | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.default.tls_x509_secret_uuid is defined and
+        libvirt_qemu.default.tls_x509_secret_uuid |string | length > 0 %}
+default_tls_x509_secret_uuid  = "{{ libvirt_qemu.default.tls_x509_secret_uuid }}"
+  {% endif %}
+{% endif %}

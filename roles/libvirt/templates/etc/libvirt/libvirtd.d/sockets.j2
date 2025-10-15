@@ -1,0 +1,19 @@
+
+#################################################################
+#
+# UNIX socket access controls
+#
+unix_sock_group           = "{{ values.unix_sock_group }}"
+unix_sock_dir             = "{{ values.unix_sock_dir }}"
+{% if values.unix_sock_ro_perms is defined and
+      values.unix_sock_ro_perms | string | length > 0 %}
+unix_sock_ro_perms        = "{{ values.unix_sock_ro_perms }}"
+{% endif %}
+{% if values.unix_sock_rw_perms is defined and
+      values.unix_sock_rw_perms | string | length > 0 %}
+unix_sock_rw_perms        = "{{ values.unix_sock_rw_perms }}"
+{% endif %}
+{% if values.unix_sock_admin_perms is defined and
+      values.unix_sock_admin_perms | string | length > 0 %}
+unix_sock_admin_perms     = "{{ values.unix_sock_admin_perms }}"
+{% endif %}

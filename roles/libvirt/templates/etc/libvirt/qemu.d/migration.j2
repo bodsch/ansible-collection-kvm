@@ -1,0 +1,44 @@
+
+{% if libvirt_qemu.migration is defined and
+      libvirt_qemu.migration | count > 0 %}
+  {% if libvirt_qemu.migrate.address is defined and
+        libvirt_qemu.migrate.address | string | length > 0 %}
+migration_address             = "{{ libvirt_qemu.migrate.address }}"
+  {% endif %}
+  {% if libvirt_qemu.migrate.host is defined and
+        libvirt_qemu.migrate.host | string | length > 0 %}
+migration_host                = "{{ libvirt_qemu.migrate.host }}"
+  {% endif %}
+  {% if libvirt_qemu.migrate.port_min is defined and
+        libvirt_qemu.migrate.port_min | string | length > 0 %}
+migration_port_min            = "{{ libvirt_qemu.migrate.port_min }}"
+  {% endif %}
+  {% if libvirt_qemu.migrate.port_max is defined and
+        libvirt_qemu.migrate.port_max | string | length > 0 %}
+migration_port_max            = "{{ libvirt_qemu.migrate.port_max }}"
+  {% endif %}
+{% endif %}
+{#
+# Override the listen address for all incoming migrations. Defaults to
+# 0.0.0.0, or :: if both host and qemu are capable of IPv6.
+#migration_address = "0.0.0.0"
+
+
+# The default hostname or IP address which will be used by a migration
+# source for transferring migration data to this host.  The migration
+# source has to be able to resolve this hostname and connect to it so
+# setting "localhost" will not work.  By default, the host's configured
+# hostname is used.
+#migration_host = "host.example.com"
+
+
+# Override the port range used for incoming migrations.
+#
+# Minimum must be greater than 0, however when QEMU is not running as root,
+# setting the minimum to be lower than 1024 will not work.
+#
+# Maximum must not be greater than 65535.
+#
+#migration_port_min = 49152
+#migration_port_max = 49215
+#}

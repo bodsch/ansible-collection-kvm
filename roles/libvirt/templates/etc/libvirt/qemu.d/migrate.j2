@@ -1,0 +1,67 @@
+
+{% if libvirt_qemu.migrate is defined and
+      libvirt_qemu.migrate | count > 0 %}
+  {% if libvirt_qemu.migrate.tls_x509_cert_dir is defined and
+        libvirt_qemu.migrate.tls_x509_cert_dir | string | length > 0 %}
+migrate_tls_x509_cert_dir     = "{{ libvirt_qemu.migrate.tls_x509_cert_dir }}"
+  {% endif %}
+  {% if libvirt_qemu.migrate.tls_x509_verify is defined and
+        libvirt_qemu.migrate.tls_x509_verify | string | length > 0 %}
+migrate_tls_x509_verify       = {{ libvirt_qemu.migrate.tls_x509_verify | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.migrate.tls_x509_secret_uuid is defined and
+        libvirt_qemu.migrate.tls_x509_secret_uuid | string | length > 0 %}
+migrate_tls_x509_secret_uuid  = "{{ libvirt_qemu.migrate.tls_x509_secret_uuid }}"
+  {% endif %}
+  {% if libvirt_qemu.migrate.tls_force is defined and
+        libvirt_qemu.migrate.tls_force | string | length > 0 %}
+migrate_tls_force             = {{ libvirt_qemu.migrate.tls_force | bool | ternary('1', '0') }}
+  {% endif %}
+{% endif %}
+{#
+# In order to override the default TLS certificate location for migration
+# certificates, supply a valid path to the certificate directory. If the
+# provided path does not exist, libvirtd will fail to start. If the path is
+# not provided, but TLS-encrypted migration is requested, then the
+# default_tls_x509_cert_dir path will be used. Once/if a default certificate is
+# enabled/defined, migration will then be able to use the certificate via
+# migration API flags.
+#
+#migrate_tls_x509_cert_dir = "/etc/pki/libvirt-migrate"
+
+
+# The default TLS configuration only uses certificates for the server
+# allowing the client to verify the server's identity and establish
+# an encrypted channel.
+#
+# It is possible to use x509 certificates for authentication too, by
+# issuing an x509 certificate to every client who needs to connect.
+#
+# Enabling this option will reject any client that does not have a
+# certificate (as described in default_tls_x509_verify) signed by the
+# CA in the migrate_tls_x509_cert_dir (or default_tls_x509_cert_dir).
+#
+# If this option is not supplied, it will be set to the value of
+# "default_tls_x509_verify". If "default_tls_x509_verify" is not supplied
+# either, the default is "1".
+#
+#migrate_tls_x509_verify = 1
+
+
+# Uncomment and use the following option to override the default secret
+# UUID provided in the default_tls_x509_secret_uuid parameter.
+#
+# NB This default all-zeros UUID will not work. Replace it with the
+# output from the UUID for the TLS secret from a 'virsh secret-list'
+# command and then uncomment the entry
+#
+#migrate_tls_x509_secret_uuid = "00000000-0000-0000-0000-000000000000"
+
+
+# By default TLS is requested using the VIR_MIGRATE_TLS flag, thus not requested
+# automatically. Setting 'migate_tls_force' to "1" will prevent any migration
+# which is not using VIR_MIGRATE_TLS to ensure higher level of security in
+# deployments with TLS.
+#
+#migrate_tls_force = 0
+#}

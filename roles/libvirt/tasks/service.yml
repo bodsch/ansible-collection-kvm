@@ -1,0 +1,20 @@
+---
+
+# - name: verify libvirt services
+#   bodsch.kvm.libvirt_services:
+#     units:
+#       - libvirtd.socket
+#       - libvirtd.service
+#       - virtqemud.socket
+#       - virtqemud.service
+#   register: _service_states
+#   ignore_errors: true
+
+- name: enable modular services
+  ansible.builtin.include_tasks: services/modular.yml
+  when:
+    - not ansible_check_mode
+    # - ansible_service_mgr | lower == "systemd"
+    # - not libvirt_services.monolithic.libvirtd.enabled
+
+...

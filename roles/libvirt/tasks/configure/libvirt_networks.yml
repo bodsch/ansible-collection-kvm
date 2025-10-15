@@ -1,0 +1,54 @@
+---
+
+- name: define virtual networks
+  become: true
+  community.libvirt.virt_net:
+    command: define
+    name: "{{ item.name }}"
+    xml: "{{ lookup('template', 'etc/libvirt/qemu/networks/network.xml.j2') }}"
+  when:
+    - item.state is defined
+    - not item.state | default("") == "absent"
+  loop: "{{ libvirt_virtual_networks }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: setting state of virtual networks
+  become: true
+  community.libvirt.virt_net:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+  when:
+    - item.state is defined
+  loop: "{{ libvirt_virtual_networks }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: setting virtual networks to autostart
+  become: true
+  community.libvirt.virt_net:
+    autostart: true
+    name: "{{ item.name }}"
+  when:
+    - item.autostart is defined
+    - item.autostart
+    - item.state | default("") == "active"
+  loop: "{{ libvirt_virtual_networks }}"
+  loop_control:
+    label: "{{ item.name }} - state: {{ item.state }}, autostart: {{ item.autostart }}"
+
+- name: remove virtual network from autostart
+  become: true
+  community.libvirt.virt_net:
+    autostart: false
+    name: "{{ item.name }}"
+  failed_when: false
+  when:
+    - item.autostart is defined
+    - not item.autostart or
+      item.state | default("") in ["inactive","absent"]
+  loop: "{{ libvirt_virtual_networks }}"
+  loop_control:
+    label: "{{ item.name }} - state: {{ item.state }}, autostart: {{ item.autostart }}"
+
+...

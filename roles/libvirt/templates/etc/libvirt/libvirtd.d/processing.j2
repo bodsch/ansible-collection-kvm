@@ -1,0 +1,53 @@
+
+#################################################################
+#
+# Processing controls
+#
+{% if values.max_clients is defined and
+      values.max_clients | string | length > 0 %}
+max_clients               = {{ values.max_clients }}
+{% endif %}
+{% if values.max_queued_clients is defined and
+      values.max_queued_clients | string | length > 0 %}
+max_queued_clients        = {{ values.max_queued_clients }}
+{% endif %}
+{% if values.max_anonymous_clients is defined and
+      values.max_anonymous_clients | string | length > 0 %}
+max_anonymous_clients     = {{ values.max_anonymous_clients }}
+{% endif %}
+{% if values.min_workers is defined and
+      values.min_workers | string | length > 0 %}
+min_workers               = {{ values.min_workers }}
+{% endif %}
+{% if values.max_workers is defined and
+      values.max_workers | string | length > 0 %}
+max_workers               = {{ values.max_workers }}
+{% endif %}
+{% if values.prio_workers is defined and
+      values.prio_workers | string | length > 0 %}
+prio_workers              = {{ values.prio_workers }}
+{% endif %}
+{% if values.max_client_requests is defined and
+      values.max_client_requests | string | length > 0 %}
+max_client_requests       = {{ values.max_client_requests }}
+{% endif %}
+{% if values.admin_min_workers is defined and
+      values.admin_min_workers | string | length > 0 %}
+admin_min_workers         = {{ values.admin_min_workers }}
+{% endif %}
+{% if values.admin_max_workers is defined and
+      values.admin_max_workers | string | length > 0 %}
+admin_max_workers         = {{ values.admin_max_workers }}
+{% endif %}
+{% if values.admin_max_clients is defined and
+      values.admin_max_clients | string | length > 0 %}
+admin_max_clients         = {{ values.admin_max_clients }}
+{% endif %}
+{% if values.admin_max_queued_clients is defined and
+      values.admin_max_queued_clients | string | length > 0 %}
+admin_max_queued_clients  = {{ values.admin_max_queued_clients }}
+{% endif %}
+{% if values.admin_max_client_requests is defined and
+      values.admin_max_client_requests | string | length > 0 %}
+admin_max_client_requests = {{ values.admin_max_client_requests }}
+{% endif %}

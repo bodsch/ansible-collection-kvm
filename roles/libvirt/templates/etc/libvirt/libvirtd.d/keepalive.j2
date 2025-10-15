@@ -1,0 +1,30 @@
+
+###################################################################
+# Keepalive protocol:
+#
+{% if values.keepalive_interval is defined and
+      values.keepalive_interval | string | length > 0 %}
+keepalive_interval        = {{ values.keepalive_interval }}
+{% endif %}
+{% if values.keepalive_count is defined and
+      values.keepalive_count | string | length > 0 %}
+keepalive_count           = {{ values.keepalive_count }}
+{% endif %}
+
+{% if values.keepalive_required is defined and
+      values.keepalive_required | string | length > 0 %}
+keepalive_required        = {{ values.keepalive_required }}
+{% endif %}
+
+{% if values.admin_keepalive_required is defined and
+      values.admin_keepalive_required | string | length > 0 %}
+admin_keepalive_required  = {{ values.admin_keepalive_required }}
+{% endif %}
+{% if values.admin_keepalive_interval is defined and
+      values.admin_keepalive_interval | string | length > 0 %}
+admin_keepalive_interval  = {{ values.admin_keepalive_interval }}
+{% endif %}
+{% if values.admin_keepalive_count is defined and
+      values.admin_keepalive_count | string | length > 0 %}
+admin_keepalive_count     = {{ values.admin_keepalive_count }}
+{% endif %}

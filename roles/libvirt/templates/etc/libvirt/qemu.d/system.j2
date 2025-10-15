@@ -1,0 +1,52 @@
+
+{% if libvirt_qemu.system is defined and
+      libvirt_qemu.system | count > 0 %}
+  {% if libvirt_qemu.system.user is defined and
+        libvirt_qemu.system.user | string | length > 0 %}
+user                          = "{{ libvirt_qemu.system.user }}"
+  {% endif %}
+  {% if libvirt_qemu.system.group is defined and
+        libvirt_qemu.system.group | string | length > 0 %}
+group                         = "{{ libvirt_qemu.system.group }}"
+  {% endif %}
+  {% if libvirt_qemu.system.dynamic_ownership is defined and
+        libvirt_qemu.system.dynamic_ownership | string | length > 0 %}
+dynamic_ownership             = {{ libvirt_qemu.system.dynamic_ownership | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.system.remember_owner is defined and
+        libvirt_qemu.system.remember_owner | string | length > 0 %}
+remember_owner                = {{ libvirt_qemu.system.remember_owner | bool | ternary('1', '0') }}
+  {% endif %}
+{% endif %}
+{#
+# The user for QEMU processes run by the system instance. It can be
+# specified as a user name or as a user id. The qemu driver will try to
+# parse this value first as a name and then, if the name doesn't exist,
+# as a user id.
+#
+# Since a sequence of digits is a valid user name, a leading plus sign
+# can be used to ensure that a user id will not be interpreted as a user
+# name.
+#
+# Some examples of valid values are:
+#
+#       user = "qemu"   # A user named "qemu"
+#       user = "+0"     # Super user (uid=0)
+#       user = "100"    # A user named "100" or a user with uid=100
+#
+#user = "root"
+
+# The group for QEMU processes run by the system instance. It can be
+# specified in a similar way to user.
+#group = "root"
+
+# Whether libvirt should dynamically change file ownership
+# to match the configured user/group above. Defaults to 1.
+# Set to 0 to disable file ownership changes.
+#dynamic_ownership = 1
+
+# Whether libvirt should remember and restore the original
+# ownership over files it is relabeling. Defaults to 1, set
+# to 0 to disable the feature.
+#remember_owner = 1
+#}

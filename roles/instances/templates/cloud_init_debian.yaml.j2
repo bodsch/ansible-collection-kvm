@@ -1,0 +1,28 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+#cloud-config
+hostname: {{ hostname }}
+fqdn: {{ hostname }}.matrix.lan
+manage_etc_hosts: true
+timezone: Europe/Berlin
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+packages: [qemu-guest-agent, curl, vim]
+
+ssh_pwauth: false
+disable_root: true
+
+users:
+  - name: admin
+    groups: [sudo, adm]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - {{ ssh_public_key | quote }}
+
+growpart: { mode: auto, devices: ["/"], ignore_growroot_disabled: false }
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent

@@ -1,0 +1,75 @@
+---
+
+- name: enable modular daemon services
+  bodsch.kvm.libvirt_services:
+    state: enable
+    units: "{{ libvirt_daemons | bodsch.kvm.modular_daemons(only_services=True) }}"
+  register: _service_states
+  notify:
+    - daemon-reload
+  ignore_errors: true
+
+# - name: disable monolithic services
+#   bodsch.kvm.libvirt_services:
+#     state: disable
+#     units:
+#       - libvirtd.service
+#       - libvirtd.socket
+#       - libvirtd-ro.socket
+#       - libvirtd-admin.socket
+#       - libvirtd-tcp.socket
+#       - libvirtd-tls.socket
+#   register: _service_states
+#   ignore_errors: true
+#
+# - name: enable modular services
+#   bodsch.kvm.libvirt_services:
+#     state: enable
+#     units: "{{ libvirt_daemons | bodsch.kvm.modular_services(only_sockets=True) }}"
+#   register: _service_states
+#   ignore_errors: true
+#
+# - name: start modular services
+#   become: true
+#   ansible.builtin.libvirt_services:
+#     state: started
+#     units: "{{ libvirt_daemons | bodsch.kvm.modular_services(only_sockets=True) }}"
+#   failed_when: false
+
+- name: remote access
+  when:
+    - libvirt_proxy.listen_tls or libvirt_proxy.listen_tcp
+  block:
+    - name: create units for proxy daemons
+      ansible.builtin.set_fact:
+        libvirt_proxy_daemons: "{{ libvirt_daemons | bodsch.kvm.libvirt_proxy_daemons(config=libvirt_proxy) }}"
+        libvirt_proxy_daemons_service: "{{ libvirt_daemons | bodsch.kvm.libvirt_proxy_daemons(config=libvirt_proxy, only_services=True) }}"
+
+    - name: enable modular proxy services
+      bodsch.kvm.libvirt_services:
+        state: enable
+        units: "{{ libvirt_proxy_daemons }}"
+      register: _service_states
+      notify:
+        - daemon-reload
+
+    - name: start modular proxy services
+      bodsch.kvm.libvirt_services:
+        state: start
+        units: "{{ libvirt_proxy_daemons_service }}"
+      register: _service_states
+      notify:
+        - daemon-reload
+      # ignore_errors: true
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+
+# proxyd
+
+# - name: ensure libvirtd is enabled on boot
+#   become: true
+#   ansible.builtin.service:
+#     name: "{{ libvirt_service.name }}"
+#     enabled: true
+#     state: started

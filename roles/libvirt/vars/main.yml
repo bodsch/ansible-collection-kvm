@@ -1,0 +1,663 @@
+---
+
+libvirt_dependecies: []
+
+libvirt_packages:
+  - libvirt
+
+libvirt_defaults_directory: "/etc/default"
+
+libvirt_defaults_service:
+  libvirtd_args: []                                   # '--timeout 120' | --listen | ...
+  qemu_audio_drv: ""                                  # sdl
+  sdl_audiodriver: ""                                 # pulse
+  #
+  start_libvirtd: ""                                  #
+  mount_cgroups: ""                                   #
+  cgroups:  []                                        #
+
+libvirt_defaults_daemons:
+  ch:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: stopped
+      enabled: false
+  interface:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: started
+      enabled: true
+  lock:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: stopped
+      enabled: false
+  log:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: started
+      enabled: true
+  lxc:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: stopped
+      enabled: false
+  network:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: started
+      enabled: true
+  nodedev:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: started
+      enabled: true
+  nwfilter:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: started
+      enabled: true
+  proxy:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: stopped
+      enabled: false
+  qemu:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: started
+      enabled: true
+  secret:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: started
+      enabled: true
+  storage:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: started
+      enabled: true
+  vbox:
+    service:
+      state: stopped
+      enabled: false
+    socket:
+      state: stopped
+      enabled: false
+
+libvirt_defaults_admin:
+  uri_dedault: ""                                     # libvirtd:///system
+  uri_aliases: []                                     # "admin=libvirtd:///system"
+
+libvirt_defaults_libvirt:
+  uri_dedault: ""                                     # "qemu:///system"
+  uri_aliases: []                                     # ["hail=qemu+ssh://root@hail.cloud.example.com/system", "sleet=qemu+ssh://root@sleet.cloud.example.com/system",]
+
+libvirt_defaults__defauls: &CONFIG_DEFAULTS
+  unix_sock_group: "libvirt"                          #
+  unix_sock_ro_perms: "0777"                          #
+  unix_sock_rw_perms: "0770"                          #
+  unix_sock_admin_perms: "0700"                       #
+  unix_sock_dir: "/run/libvirt"                       #
+  auth_unix_ro: "polkit"                              #
+  auth_unix_rw: "polkit"                              #
+  access_drivers: []                                  #
+  #  - polkit                                         #
+  sasl_allowed_username_list: []                      #
+  #  - joe@EXAMPLE.COM                                #
+  #  - fred@EXAMPLE.COM                               #
+  max_clients: ""                                     # 5000
+  max_queued_clients: ""                              # 1000
+  max_anonymous_clients: ""                           # 20
+  min_workers: ""                                     # 5
+  max_workers: ""                                     # 20
+  prio_workers: ""                                    # 5
+  max_client_requests: ""                             # 5
+  admin_min_workers: ""                               # 1
+  admin_max_workers: ""                               # 5
+  admin_max_clients: ""                               # 5
+  admin_max_queued_clients: ""                        # 5
+  admin_max_client_requests: ""                       # 5
+  audit_level: ""                                     # 2
+  audit_logging: ""                                   # 1
+  host_uuid: ""                                       # 00000000-0000-0000-0000-000000000000
+  host_uuid_source: ""                                # smbios
+  keepalive_interval: ""                              # 5
+  keepalive_count: ""                                 # 5
+  keepalive_required: ""                              # 1
+  admin_keepalive_required: ""                        # 1
+  admin_keepalive_interval: ""                        # 5
+  admin_keepalive_count: ""                           # 5
+  ovs_timeout: ""                                     # 5
+
+# -------------------------------------------------------
+
+libvirt_defaults_ch:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtchd
+
+libvirt_defaults_interface:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+     -1:util
+  log_outputs:
+    - 3:syslog:virtinterfaced
+
+libvirt_defaults_lock:
+  log_level: 3
+  log_filters:
+    - 1:locking
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtlockd
+  max_clients: 1024
+  admin_max_clients: 5
+
+libvirt_defaults_log:
+  # - Logging controls
+  #    1: DEBUG
+  #    2: INFO
+  #    3: WARNING
+  #    4: ERROR
+  log_level: 3
+  log_filters:
+    - 1:logging
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  # Logging outputs:
+  # An output is one of the places to save logging information
+  # The format for an output can be:
+  #    level:stderr
+  #      output goes to stderr
+  #    level:syslog:name
+  #      use syslog for the output and use the given name as the ident
+  #    level:file:file_path
+  #      output to a file, with the given filepath
+  #    level:journald
+  #      output to journald logging system
+  log_outputs:
+    - 2:file:/var/log/libvirt/virtlogd.log
+    - 3:syslog:virtlogd
+    - 3:journald
+  max_clients: 1024
+  admin_max_clients: 5
+  max_size: 2097152
+  max_backups: 3
+  max_age_days: 0
+  log_root: "/var/log/libvirt"
+
+libvirt_defaults_login_shell:
+  # shell: "/bin/bash"
+  shell: [ "/bin/bash", "--posix" ]
+  auto_shell: 1
+  allowed_users: []
+  #allowed_users: ["fred", "joe"]
+  #allowed_users: ["%engineers"]
+  #allowed_users: [ "*" ]
+
+libvirt_defaults_lxc:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtlxcd
+
+libvirt_defaults_network:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtnetworkd
+
+libvirt_defaults_nodedev:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtnodevd
+
+libvirt_defaults_nwfilter:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtnwfilterd
+
+libvirt_defaults_proxy:
+  <<: *CONFIG_DEFAULTS
+  listen_tls: 0
+  listen_tcp: 1
+  tls_port: "16514"
+  tcp_port: "16509"
+  listen_addr: "192.168.0.1"
+  auth_tcp: "sasl"
+  auth_tls: "none"
+  tcp_min_ssf: 112
+  key_file: "/etc/pki/libvirt/private/serverkey.pem"
+  cert_file: "/etc/pki/libvirt/servercert.pem"
+  ca_file: "/etc/pki/CA/cacert.pem"
+  crl_file: "/etc/pki/CA/crl.pem"
+  tls_no_sanity_certificate: 1
+  tls_no_verify_certificate: 1
+  tls_allowed_dn_list: ["DN1", "DN2"]
+  tls_priority: "NORMAL"
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtproxyd
+
+libvirt_defaults_qemu:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtqemud
+
+libvirt_defaults_secret:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtsecretd
+
+libvirt_defaults_storage:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtstoraged
+
+libvirt_defaults_vbox:
+  <<: *CONFIG_DEFAULTS
+  log_level: 3
+  log_filters:
+    - 1:qemu
+    - 1:libvirt
+    - 4:object
+    - 4:json
+    - 4:event
+    - 1:util
+  log_outputs:
+    - 3:syslog:virtvboxd
+
+libvirt_defaults_libvirtd:
+  # - network
+  enable_tls: false
+  enable_tcp: false
+  tls_port: 16514
+  tcp_port: 16509
+  listen_addr: "127.0.0.1"        # 192.168.0.1
+  enable_mdns: false
+  # - socket
+  unix_sock_group: "libvirt"      # libvirt
+  unix_sock_ro_perms: ""          # 0777
+  unix_sock_rw_perms: ""          # 0770
+  unix_sock_admin_perms: ""       # 0770
+  unix_sock_dir: "/run/libvirt"   # /run/libvirt
+  # - authentication
+  #  - none
+  #  - sasl
+  #  - polkit
+  auth_unix_ro: ""                # polkit
+  auth_unix_rw: ""                # polkit
+  # auth_tcp = "sasl"
+  # auth_tls = "none"
+  # tcp_min_ssf = 112
+  # access_drivers = [ "polkit" ]
+  ## - TLS x509 certificate configuration
+  # key_file = "/etc/pki/libvirt/private/serverkey.pem"
+  # cert_file = "/etc/pki/libvirt/servercert.pem"
+  # ca_file = "/etc/pki/CA/cacert.pem"
+  # crl_file = "/etc/pki/CA/crl.pem"
+  ## - Authorization controls
+  # tls_no_sanity_certificate = 1
+  # tls_no_verify_certificate = 1
+  # tls_allowed_dn_list = ["DN1", "DN2"]
+  # tls_priority="NORMAL"
+  # sasl_allowed_username_list = ["joe@EXAMPLE.COM", "fred@EXAMPLE.COM" ]
+  ## - Processing controls
+  max_clients: 5000              # 5000
+  max_queued_clients: 1000       # 1000
+  max_anonymous_clients: 20      # 20
+  min_workers: 5                 # 5
+  max_workers: 20                # 20
+  prio_workers: 5                # 5
+  max_requests: ""               # ?
+  max_client_requests: 5         # 5
+  admin_min_workers: 1           # 1
+  admin_max_workers: 5           # 5
+  admin_max_clients: 5           # 5
+  admin_max_queued_clients: 5    # 5
+  admin_max_client_requests: 5   # 5
+  # - Logging controls
+  #    1: DEBUG
+  #    2: INFO
+  #    3: WARNING
+  #    4: ERROR
+  log_level: 3
+  log_filters:
+    - 3:access
+    - 3:remote
+    - 4:event
+    # - 3:util.json
+    # - 3:util.object
+    # - 3:util.dbus
+    # - 3:util.netlink
+    # - 3:node_device
+    # - 3:rpc
+    # - 1:*
+  # ="1:qemu 1:libvirt 4:object 4:json 4:event 1:util"
+  # Logging outputs:
+  # An output is one of the places to save logging information
+  # The format for an output can be:
+  #    level:stderr
+  #      output goes to stderr
+  #    level:syslog:name
+  #      use syslog for the output and use the given name as the ident
+  #    level:file:file_path
+  #      output to a file, with the given filepath
+  #    level:journald
+  #      output to journald logging system
+  # In all cases 'level' is the minimal priority, acting as a filter
+  #    1: DEBUG
+  #    2: INFO
+  #    3: WARNING
+  #    4: ERROR
+  log_outputs:
+    - 2:file:/var/log/libvirt/libvirtd.log
+    - 3:journald
+
+  # - auditing                    #
+  #   audit_level == 0  -> disable all auditing
+  #   audit_level == 1  -> enable auditing, only if enabled on host (default)
+  #   audit_level == 2  -> enable auditing, and exit if disabled on host
+  #
+  audit_level: 1
+  #
+  # If set to 1, then audit messages will also be sent
+  # via libvirt logging infrastructure. Defaults to 0
+  #
+  audit_logging: true
+  # - UUID of the host
+  # host_uuid = "00000000-0000-0000-0000-000000000000"
+  # host_uuid_source = "smbios"
+  # - Keepalive protocol          #
+  keepalive_interval: ""          # 5
+  keepalive_count: ""             # 5
+  admin_keepalive_interval: ""    # 5
+  admin_keepalive_count: ""       # 5
+  # - Open vSwitch
+  ovs_timeout: ""                 # 5
+
+# libvirt_defaults_qemu:
+#   default:
+#     tls_x509_cert_dir: ""       # "/etc/pki/qemu"
+#     tls_x509_verify: ""         #  1
+#     tls_x509_secret_uuid: ""    # "00000000-0000-0000-0000-000000000000"
+#
+#   auto:
+#     dump_path: "/var/lib/libvirt/qemu/dump"
+#     dump_bypass_cache: false
+#     start_bypass_cache: false
+#
+#   backup:
+#     tls_x509_cert_dir: ""       # "/etc/pki/libvirt-backup"
+#     tls_x509_verify: ""         # 1
+#     tls_x509_secret_uuid: ""    # "00000000-0000-0000-0000-000000000000"
+#
+#   cgroup:
+#     controllers: []
+#       # - cpu
+#       # - devices
+#       # - memory
+#       # - blkio
+#       # - cpuset
+#       # - cpuacct
+#     device_acl: []
+#       # - "/dev/null"
+#       # - "/dev/full"
+#       # - "/dev/zero"
+#       # - "/dev/random"
+#       # - "/dev/urandom"
+#       # - "/dev/ptmx"
+#       # - "/dev/kvm"
+#
+#   chardev:
+#     tls: ""                   # 1
+#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-chardev"
+#     tls_x509_verify: ""       # 1
+#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+#
+#   migrate:
+#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-migrate"
+#     tls_x509_verify: ""       # 1
+#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+#     tls_force: ""             # 0
+#
+#   migration:
+#     address: "0.0.0.0"
+#     host: ""                  # "host.example.com"
+#     port_min: ""              # 49152
+#     port_max: ""              # 49215
+#
+#   nbd:
+#     tls: ""                   # 1
+#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-nbd"
+#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+#
+#   nographics:
+#     allow_host_audio: true
+#
+#   remote:
+#     display_port_min: 5900
+#     display_port_max: 65535
+#     websocket_port_min: 5700
+#     websocket_port_max: 65535
+#
+#   security:
+#     drivers: []
+#     #  - selinux
+#     #  - apparmor
+#     default_confined: false
+#     require_confined: false
+#
+#   spice:
+#     listen: "0.0.0.0"
+#     tls: false
+#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-spice"
+#     auto_unix_socket: ""      # 1
+#     password: ""              # "XYZ12345"
+#     sasl: ""                  # 1
+#     sasl_dir: ""              # "/some/directory/sasl2"
+#
+#   vnc:
+#     listen: "127.0.0.1"
+#     auto_unix_socket: true
+#     tls: false
+#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-vnc"
+#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+#     tls_x509_verify: ""       # true
+#     password: ""              # "XYZ12345"
+#     sasl: ""                  # true
+#     sasl_dir: ""              # "/some/directory/sasl2"
+#     allow_host_audio: ""      # false
+#
+#   vxhs:
+#     tls: ""                   # 1
+#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-vxhs"
+#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+#
+#   system:
+#     user: "root"
+#     group: "root"
+#     dynamic_ownership: true
+#     remember_owner: true
+#
+#   image_format:
+#     save_image_format: ""     # "raw"
+#     dump_image_format: ""     # "raw"
+#     snapshot_image_format: "" # "raw"
+#
+#   misc:
+#     # If provided by the host and a hugetlbfs mount point is configured,
+#     # a guest may request huge page backing.  When this mount point is
+#     # unspecified here, determination of a host mount point in /proc/mounts
+#     # will be attempted.  Specifying an explicit mount overrides detection
+#     # of the same in /proc/mounts.  Setting the mount point to "" will
+#     # disable guest hugepage backing. If desired, multiple mount points can
+#     # be specified at once, separated by comma and enclosed in square
+#     # brackets, for example:
+#     #
+#     #     hugetlbfs_mount = ["/dev/hugepages2M", "/dev/hugepages1G"]
+#     #
+#     # The size of huge page served by specific mount point is determined by
+#     # libvirt at the daemon startup.
+#     #
+#     # NB, within these mount points, guests will create memory backing
+#     # files in a location of $MOUNTPOINT/libvirt/qemu
+#     #
+#     hugetlbfs_mounts: []
+#       # - "/dev/hugepages"
+#
+#     # Path to the setuid helper for creating tap devices.  This executable
+#     # is used to create <source type='bridge'> interfaces when libvirtd is
+#     # running unprivileged.  libvirt invokes the helper directly, instead
+#     # of using "-netdev bridge", for security reasons.
+#     bridge_helper: "/usr/lib/qemu/qemu-bridge-helper"
+#
+#
+#     # If enabled, libvirt will have QEMU set its process name to
+#     # "qemu:VM_NAME", where VM_NAME is the name of the VM. The QEMU
+#     # process will appear as "qemu:VM_NAME" in process listings and
+#     # other system monitoring tools. By default, QEMU does not set
+#     # its process title, so the complete QEMU command (emulator and
+#     # its arguments) appear in process listings.
+#     #
+#     set_process_name: true
+#
+#     # Determine if guest RAM is included in QEMU core dumps. By
+#     # default guest RAM will be excluded if a new enough QEMU is
+#     # present. Setting this to '1' will force guest RAM to always
+#     # be included in QEMU core dumps.
+#     #
+#     # This setting will be ignored if the guest XML has set the
+#     # dumpcore attribute on the <memory> element.
+#     #
+#     dump_guest_core: ""
+#
+#     # mac_filter enables MAC addressed based filtering on bridge ports.
+#     # This currently requires ebtables to be installed.
+#     #
+#     mac_filter: ""
+#
+#
+#     # By default, PCI devices below non-ACS switch are not allowed to be assigned
+#     # to guests. By setting relaxed_acs_check to 1 such devices will be allowed to
+#     # be assigned to guests.
+#     #
+#     relaxed_acs_check: ""
+#
+#
+#     # In order to prevent accidentally starting two domains that
+#     # share one writable disk, libvirt offers two approaches for
+#     # locking files. The first one is sanlock, the other one,
+#     # virtlockd, is then our own implementation. Accepted values
+#     # are "sanlock" and "lockd".
+#     #
+#     lock_manager: ""
+
+# libvirt_defaults_network:
+#   firewall_backend: "iptables"                    # nftables, iptables
+...

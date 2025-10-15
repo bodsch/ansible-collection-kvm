@@ -1,0 +1,68 @@
+
+{% if libvirt_qemu.cgroup is defined and
+      libvirt_qemu.cgroup | count > 0 %}
+  {% if libvirt_qemu.cgroup.controllers is defined and
+        libvirt_qemu.cgroup.controllers | count > 0 %}
+    {% set _controllers = libvirt_qemu.cgroup.controllers | bodsch.kvm.cgroup_controllers() %}
+cgroup_controllers            = [ "{{ _controllers | join('", "') }}" ]
+  {% endif %}
+  {% if libvirt_qemu.cgroup.device_acl is defined and
+        libvirt_qemu.cgroup.device_acl | count > 0 %}
+cgroup_device_acl             = [
+  "{{ libvirt_qemu.cgroup.device_acl | join('", "') }}"
+]
+
+# RDMA migration requires the following extra files to be added to the list:
+#   "/dev/infiniband/rdma_cm",
+#   "/dev/infiniband/issm0",
+#   "/dev/infiniband/issm1",
+#   "/dev/infiniband/umad0",
+#   "/dev/infiniband/umad1",
+#   "/dev/infiniband/uverbs0"
+  {% endif %}
+{% endif %}
+{#
+# What cgroup controllers to make use of with QEMU guests
+#
+#  - 'cpu' - use for scheduler tunables
+#  - 'devices' - use for device access control
+#  - 'memory' - use for memory tunables
+#  - 'blkio' - use for block devices I/O tunables
+#  - 'cpuset' - use for CPUs and memory nodes
+#  - 'cpuacct' - use for CPUs statistics.
+#
+# NB, even if configured here, they won't be used unless
+# the administrator has mounted cgroups, e.g.:
+#
+#  mkdir /dev/cgroup
+#  mount -t cgroup -o devices,cpu,memory,blkio,cpuset none /dev/cgroup
+#
+# They can be mounted anywhere, and different controllers
+# can be mounted in different locations. libvirt will detect
+# where they are located.
+#
+#cgroup_controllers = [ "cpu", "devices", "memory", "blkio", "cpuset", "cpuacct" ]
+
+# This is the basic set of devices allowed / required by
+# all virtual machines.
+#
+# As well as this, any configured block backed disks,
+# all sound device, and all PTY devices are allowed.
+#
+# This will only need setting if newer QEMU suddenly
+# wants some device we don't already know about.
+#
+#cgroup_device_acl = [
+#    "/dev/null", "/dev/full", "/dev/zero",
+#    "/dev/random", "/dev/urandom",
+#    "/dev/ptmx", "/dev/kvm"
+#]
+#
+# RDMA migration requires the following extra files to be added to the list:
+#   "/dev/infiniband/rdma_cm",
+#   "/dev/infiniband/issm0",
+#   "/dev/infiniband/issm1",
+#   "/dev/infiniband/umad0",
+#   "/dev/infiniband/umad1",
+#   "/dev/infiniband/uverbs0"
+#}

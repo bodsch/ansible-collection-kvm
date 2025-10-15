@@ -1,0 +1,29 @@
+
+# Network connectivity controls
+#
+{% if values.enable_tls is defined and
+      values.enable_tls %}
+listen_tls                = {{ values.enable_tls | bool | ternary('1', '0') }}
+  {% if values.tls_port is defined and
+        values.tls_port | string | length > 0 and
+        values.tls_port | int > 0 %}
+tls_port                  = "{{ values.tls_port }}"
+  {% endif %}
+{% endif %}
+{% if values.enable_tcp is defined and
+      values.enable_tcp %}
+listen_tcp                = {{ values.enable_tcp | bool | ternary('1', '0') }}
+  {% if values.tcp_port is defined and
+        values.tcp_port | string | length > 0 and
+        values.tcp_port | int > 0 %}
+tcp_port                  = "{{ values.tcp_port }}"
+  {% endif %}
+{% endif %}
+{% if values.listen_addr is defined and
+      values.listen_addr | string | length > 0 %}
+listen_addr               = "{{ values.listen_addr }}"
+{% endif %}
+{% if values.enable_mdns is defined and
+      values.enable_mdns %}
+mdns_adv                  = {{ values.enable_mdns | bool | ternary('1', '0') }}
+{% endif %}

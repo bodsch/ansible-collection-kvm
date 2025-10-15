@@ -1,0 +1,14 @@
+---
+
+libvirt_dependecies:
+  - dmidecode
+  - bridge-utils
+
+libvirt_packages:
+  - libvirt
+  - libvirt-openrc
+  - libvirt-python
+
+libvirt_defaults_directory: "/etc/conf.d"
+
+...

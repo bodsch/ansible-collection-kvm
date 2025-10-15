@@ -1,0 +1,33 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+<network>
+  <name>{{ libvirt_network }}</name>
+  <forward mode='nat'/>
+  <bridge name='virbr1' stp='on' delay='0'/>
+  <ip address='192.168.100.1' netmask='255.255.255.0'>
+    <dhcp/>
+  </ip>
+</network>
+{#
+
+<network>
+  <name>bridge_network</name>
+  <uuid>cc00d817-f48f-4b7f-a7f2-9c12058174ed</uuid>
+  <forward mode='bridge'/>
+  <bridge name='br0'/>
+</network>
+
+
+<network>
+  <name>default</name>
+  <uuid>ea59440b-16cb-45b2-a8c2-16e4450b3186</uuid>
+  <forward mode='nat'/>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <mac address='52:54:00:db:f6:93'/>
+  <ip address='192.168.122.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.122.2' end='192.168.122.254'/>
+    </dhcp>
+  </ip>
+</network>
+
+#}

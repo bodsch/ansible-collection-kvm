@@ -1,0 +1,44 @@
+---
+
+- name: include OS specific configuration ({{ ansible_distribution }} ({{ ansible_os_family }}) {{ ansible_distribution_major_version }})
+  ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      paths:
+        - "vars"
+      files:
+        # eg. debian-10 / ubuntu-20.04 / centos-8 / oraclelinux-8
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+        # eg. archlinux-systemd / archlinux-openrc
+        - "{{ ansible_distribution | lower }}-{{ ansible_service_mgr | lower }}.yml"
+        # eg. debian / ubuntu / centos / oraclelinux
+        - "{{ ansible_distribution | lower }}.yml"
+        # eg. redhat / debian / archlinux
+        - "{{ ansible_os_family | lower }}.yml"
+        - default.yaml
+      skip: true
+
+- name: update package cache
+  ansible.builtin.package:
+    update_cache: true
+
+- name: load cpu info
+  become: true
+  ansible.builtin.slurp:
+    src: /proc/cpuinfo
+  register: cpu_info
+
+- name: identify hardware virtualization support
+  ansible.builtin.set_fact:
+    libvirt_domain_type: "{{
+      cpu_info['content'] | b64decode |
+      regex_search('(vmx|svm)', multiline=True) |
+      ternary('kvm', 'qemu') }}"
+
+- name: fail if Virtualization Technology (VT) is not kvm or qemu
+  ansible.builtin.fail:
+    msg: >
+      Virtualization Technology (VT) is currently disabled.
+      Please enable VT before running this role again.
+  when:
+    - not libvirt_domain_type in ["kvm","qemu"]

@@ -1,0 +1,11 @@
+---
+
+- name: Ensure network defined and active
+  community.libvirt.virt_net:
+    name: "{{ libvirt_network }}"
+    state: active
+    autostart: true
+    xml: "{{ lookup('template', 'net.xml.j2') }}"
+    uri: "{{ libvirt_uri }}"
+
+...

@@ -1,0 +1,44 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if libvirt_service is defined %}
+
+  {% if libvirt_service.libvirtd_args is defined and
+        libvirt_service.libvirtd_args | string | length > 0 %}
+    {% if libvirt_service.libvirtd_args | bodsch.core.type == "string" %}
+LIBVIRTD_ARGS={{ libvirt_service.libvirtd_args }} \
+    {% elif libvirt_service.libvirtd_args | bodsch.core.type == "list" %}
+LIBVIRTD_ARGS={{ libvirt_service.libvirtd_args | join(' ') }} \
+    {% endif %}
+  {% endif %}
+  {% if libvirt_service.qemu_audio_drv is defined and
+        libvirt_service.qemu_audio_drv | string | length > 0 %}
+QEMU_AUDIO_DRV={{ libvirt_service.qemu_audio_drv }}
+  {% endif %}
+  {% if libvirt_service.sdl_audiodriver is defined and
+        libvirt_service.sdl_audiodriver | string | length > 0 %}
+SDL_AUDIODRIVER={{ libvirt_service.sdl_audiodriver }}
+  {% endif %}
+
+  {% if not ansible_service_mgr | lower == "systemd" %}
+#############################################################
+### The following settings are IGNORED when using systemd ###
+#############################################################
+    {% if libvirt_service.start_libvirtd is defined and
+          libvirt_service.start_libvirtd | string | length > 0 %}
+start_libvirtd={{  libvirt_service.start_libvirtd | bodsch.core.config_bool(true_as='yes', false_as='no')  }}
+    {% endif %}
+    {% if libvirt_service.mount_cgroups is defined and
+          libvirt_service.mount_cgroups | string | length > 0 %}
+mount_cgroups={{ libvirt_service.mount_cgroups | bodsch.core.config_bool(true_as='yes', false_as='no') }}
+    {% endif %}
+    {% if libvirt_service.cgroups is defined and
+          libvirt_service.cgroups | string | length > 0 %}
+      {% if libvirt_service.cgroups | bodsch.core.type == "string" %}
+cgroups={{ libvirt_service.cgroups }} \
+      {% elif libvirt_service.cgroups | bodsch.core.type == "list" %}
+cgroups={{ libvirt_service.cgroups | join(' ') }} \
+      {% endif %}
+    {% endif %}
+  {% endif %}
+{% endif %}

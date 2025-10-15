@@ -1,0 +1,10 @@
+---
+
+# Gerätezuordnung
+vm_root_disk_bus: "virtio"
+vm_cdrom_bus: "sata"
+
+# Ziel-Gerätenamen ab vdb für Datenplatten
+vm_data_disk_letters: [ "b","c","d","e","f","g","h","i" ]
+
+...

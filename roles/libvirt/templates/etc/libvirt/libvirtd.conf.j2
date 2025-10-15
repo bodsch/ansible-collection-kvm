@@ -1,0 +1,14 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% include('libvirtd.d/network.j2') %}
+{% include('libvirtd.d/sockets.j2') %}
+{% include('libvirtd.d/authentication.j2') %}
+{% include('libvirtd.d/x509-certificate.j2') %}
+{% include('libvirtd.d/authorization.j2') %}
+{% include('libvirtd.d/processing.j2') %}
+{% include('libvirtd.d/logging.j2') %}
+{% include('libvirtd.d/auditing.j2') %}
+{% include('libvirtd.d/uuid.j2') %}
+{% include('libvirtd.d/keepalive.j2') %}
+{% include('libvirtd.d/open-vswitch.j2') %}

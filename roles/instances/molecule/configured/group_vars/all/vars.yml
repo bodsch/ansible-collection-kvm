@@ -1,0 +1,43 @@
+---
+
+instances_libvirt:
+  uri: "qemu:///system"
+  pool: "default"
+
+ssh_public_key: "ssh-ed25519 AAAA...meinkey"
+
+# Basis-Images MÜSSEN als Volumes im Pool existieren (Name in libvirt!)
+# z.B. via `virt-manager` oder separatem Playbook anlegen.
+os_base_volumes:
+  - name: debian-12
+    source: "http://..."
+    destination: "debian-12-base.qcow2"
+  - name: arch
+    source: "http://..."
+    destination: "archlinux-base.qcow2"
+
+# VMs (Schlüssel = interner Bezeichner)
+instances:
+  dns:
+    hostname: "dns"
+    vcpus: 1
+    memory_mb: 1024
+    os: "debian12"          # "debian12" | "arch"
+    ip:
+      prefix: "192.168.0"
+      octet: 11
+    os_disk_gb: 10
+    data_disks:
+      - { name: "data0", size_gb: 20 }
+      - { name: "logs",  size_gb: 10 }
+
+  arch-ci:
+    hostname: "arch-ci"
+    vcpus: 2
+    memory_mb: 2048
+    os: "arch"
+    ip: { prefix: "192.168.0", octet: 42 }
+    os_disk_gb: 20
+    data_disks: []
+
+...

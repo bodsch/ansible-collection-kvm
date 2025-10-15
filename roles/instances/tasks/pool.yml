@@ -1,0 +1,25 @@
+---
+- name: Ensure storage pool active
+  community.libvirt.virt_pool:
+    name: "{{ libvirt_pool }}"
+    state: active
+    autostart: true
+    uri: "{{ libvirt_uri }}"
+
+- name: Get pool XML
+  community.libvirt.virt_pool:
+    name: "{{ libvirt_pool }}"
+    command: get_xml
+    uri: "{{ libvirt_uri }}"
+  register: pool_xml
+
+- name: Extract pool path
+  ansible.builtin.xml:
+    xmlstring: "{{ pool_xml.msg }}"
+    content: text
+    xpath: /pool/target/path
+  register: pool_path_xml
+
+- name: Set pool path fact
+  ansible.builtin.set_fact:
+    libvirt_pool_path: "{{ pool_path_xml.matches[0].pool.target.path }}"

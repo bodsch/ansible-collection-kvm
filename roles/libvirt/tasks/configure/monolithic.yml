@@ -1,0 +1,29 @@
+---
+
+- name: merge libvirt config configuration between defaults and custom
+  ansible.builtin.set_fact:
+    libvirt_libvirtd: "{{ libvirt_defaults_libvirtd | combine(libvirt_libvirtd, recursive=True) }}"
+
+- name: create libvirtd.conf
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/libvirtd.conf.j2
+    dest: /etc/libvirt/libvirtd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart {{ libvirt_service.name }}
+
+- name: create network.conf
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/network.conf.j2
+    dest: /etc/libvirt/network.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart {{ libvirt_service.name }}

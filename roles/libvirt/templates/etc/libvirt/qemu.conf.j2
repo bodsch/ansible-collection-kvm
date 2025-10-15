@@ -1,0 +1,20 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{%- include('qemu.d/default.j2') %}
+{%- include('qemu.d/auto.j2') %}
+{%- include('qemu.d/backup.j2') %}
+{%- include('qemu.d/cgroup.j2') %}
+{%- include('qemu.d/chardev.j2') %}
+{%- include('qemu.d/image_format.j2') %}
+{%- include('qemu.d/migrate.j2') %}
+{%- include('qemu.d/migration.j2') %}
+{%- include('qemu.d/nbd.j2') %}
+{%- include('qemu.d/nographics.j2') %}
+{%- include('qemu.d/remote.j2') %}
+{%- include('qemu.d/security.j2') %}
+{%- include('qemu.d/spice.j2') %}
+{%- include('qemu.d/system.j2') %}
+{%- include('qemu.d/vnc.j2') %}
+{%- include('qemu.d/vxhs.j2') %}
+{%- include('qemu.d/misc.j2') %}

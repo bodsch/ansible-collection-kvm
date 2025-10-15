@@ -1,0 +1,29 @@
+
+#################################################################
+#
+# Authorization controls
+#
+{% if values.tls_no_sanity_certificate is defined and
+      values.tls_no_sanity_certificate | string | length > 0 %}
+tls_no_sanity_certificate = {{ values.tls_no_sanity_certificate | int }}
+{% endif %}
+
+{% if values.tls_no_verify_certificate is defined and
+      values.tls_no_verify_certificate | string | length > 0 %}
+tls_no_verify_certificate = {{ values.tls_no_verify_certificate | int }}
+{% endif %}
+
+{% if values.tls_allowed_dn_list is defined and
+      values.tls_allowed_dn_list | count > 0 %}
+tls_allowed_dn_list       = [ "{{ values.tls_allowed_dn_list | join('","') }}" ]
+{% endif %}
+
+{% if values.tls_priority is defined and
+      values.tls_priority | string | length > 0 %}
+tls_priority              = "{{ values.tls_priority }}"
+{% endif %}
+
+{% if values.sasl_allowed_username_list is defined and
+      values.sasl_allowed_username_list | count > 0 %}
+sasl_allowed_username_list = [ "{{ values.sasl_allowed_username_list | join('","') }}" ]
+{% endif %}

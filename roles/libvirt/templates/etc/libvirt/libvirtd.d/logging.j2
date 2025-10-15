@@ -1,0 +1,19 @@
+
+#################################################################
+#
+# Logging controls
+#
+{% if values.log_level is defined and
+      values.log_level | string | length > 0 and
+      (values.log_level | int >= 1 or
+      values.log_level | int <= 4) %}
+log_level                 = {{ values.log_level }}
+{% endif %}
+{% if values.log_filters is defined and
+      values.log_filters | count > 0 %}
+log_filters               = "{{ values.log_filters | join(' ') }}"
+{% endif %}
+{% if values.log_outputs is defined and
+      values.log_outputs %}
+log_outputs               = "{{ values.log_outputs | join(' ') }}"
+{% endif %}

@@ -1,0 +1,211 @@
+---
+
+- name: merge libvirt config configuration between defaults and custom
+  ansible.builtin.set_fact:
+    libvirt_ch: "{{ libvirt_defaults_ch | combine(libvirt_ch, recursive=True) }}"
+    libvirt_interface: "{{ libvirt_defaults_interface | combine(libvirt_interface, recursive=True) }}"
+    libvirt_lock: "{{ libvirt_defaults_lock | combine(libvirt_lock, recursive=True) }}"
+    libvirt_log: "{{ libvirt_defaults_log | combine(libvirt_log, recursive=True) }}"
+    libvirt_login_shell: "{{ libvirt_defaults_login_shell | combine(libvirt_login_shell, recursive=True) }}"
+    libvirt_lxc: "{{ libvirt_defaults_lxc | combine(libvirt_lxc, recursive=True) }}"
+    libvirt_network: "{{ libvirt_defaults_network | combine(libvirt_network, recursive=True) }}"
+    libvirt_nodedev: "{{ libvirt_defaults_nodedev | combine(libvirt_nodedev, recursive=True) }}"
+    libvirt_nwfilter: "{{ libvirt_defaults_nwfilter | combine(libvirt_nwfilter, recursive=True) }}"
+    libvirt_proxy: "{{ libvirt_defaults_proxy | combine(libvirt_proxy, recursive=True) }}"
+    libvirt_qemu: "{{ libvirt_defaults_qemu | combine(libvirt_qemu, recursive=True) }}"
+    libvirt_secret: "{{ libvirt_defaults_secret | combine(libvirt_secret, recursive=True) }}"
+    libvirt_storage: "{{ libvirt_defaults_storage | combine(libvirt_storage, recursive=True) }}"
+    libvirt_vbox: "{{ libvirt_defaults_vbox | combine(libvirt_vbox, recursive=True) }}"
+  no_log: true
+
+- name: create system virtchd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtchd.conf.j2
+    dest: /etc/libvirt/virtchd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtchd.socket
+
+- name: create system virtinterfaced config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtinterfaced.conf.j2
+    dest: /etc/libvirt/virtinterfaced.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtinterfaced.socket
+
+- name: create system virtlockd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtlockd.conf.j2
+    dest: /etc/libvirt/virtlockd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtlockd.socket
+
+- name: create system virtlogd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtlogd.conf.j2
+    dest: /etc/libvirt/virtlogd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtlogd.socket
+
+- name: create system virtlxcd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtlxcd.conf.j2
+    dest: /etc/libvirt/virtlxcd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtlxcd.socket
+
+- name: create system virtnetworkd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtnetworkd.conf.j2
+    dest: /etc/libvirt/virtnetworkd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtnetworkd.socket
+
+- name: create system virtnodedevd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtnodedevd.conf.j2
+    dest: /etc/libvirt/virtnodedevd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtnodedevd.socket
+
+- name: create system virtnwfilterd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtnwfilterd.conf.j2
+    dest: /etc/libvirt/virtnwfilterd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtnwfilterd.socket
+
+- name: create system virtproxyd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtproxyd.conf.j2
+    dest: /etc/libvirt/virtproxyd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtproxyd.socket
+
+- name: create system virtqemud config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtqemud.conf.j2
+    dest: /etc/libvirt/virtqemud.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtqemud.socket
+
+- name: create system virtsecretd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtsecretd.conf.j2
+    dest: /etc/libvirt/virtsecretd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtsecretd.socket
+
+- name: create system virtstoraged config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtstoraged.conf.j2
+    dest: /etc/libvirt/virtstoraged.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtstoraged.socket
+
+- name: create system virtvboxd config
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/virtvboxd.conf.j2
+    dest: /etc/libvirt/virtvboxd.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart virtvboxd.socket
+
+- name: remove older ansible backup files
+  bodsch.core.remove_ansible_backups:
+    path: /etc/libvirt
+    hold: 2
+
+- name: disable monolithic daemons
+  bodsch.kvm.libvirt_services:
+    state: disable
+    units:
+      - libvirtd.service
+      - libvirtd.socket
+      - libvirtd-ro.socket
+      - libvirtd-admin.socket
+      - libvirtd-tcp.socket
+      - libvirtd-tls.socket
+  register: _service_states
+  notify:
+    - daemon-reload
+
+- name: merge libvirt config configuration between defaults and custom
+  ansible.builtin.set_fact:
+    libvirt_daemons: "{{ libvirt_defaults_daemons | combine(libvirt_daemons, recursive=True) }}"
+  no_log: true
+
+- name: enable modular daemon sockets
+  bodsch.kvm.libvirt_services:
+    state: enable
+    units: "{{ libvirt_daemons | bodsch.kvm.modular_daemons(only_sockets=True) }}"
+  register: _service_states
+  # ignore_errors: true
+  notify:
+    - daemon-reload
+
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers

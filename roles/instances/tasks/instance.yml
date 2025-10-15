@@ -1,0 +1,102 @@
+---
+
+- name: Assemble VM vars
+  ansible.builtin.set_fact:
+    vm: "{{ {
+      'key': vmitem.key,
+      'name': servers[vmitem.key].hostname,
+      'hostname': servers[vmitem.key].hostname,
+      'os': servers[vmitem.key].os | lower,
+      'vcpus': servers[vmitem.key].vcpus,
+      'memory_mb': servers[vmitem.key].memory_mb,
+      'os_disk_gb': servers[vmitem.key].os_disk_gb,
+      'data_disks': servers[vmitem.key].data_disks | default([]),
+      'ip_prefix': servers[vmitem.key].ip.prefix,
+      'ip_octet':  servers[vmitem.key].ip.octet
+    } }}"
+
+- name: Create OS disk by cloning base volume
+  community.libvirt.virt_volume:
+    uri: "{{ libvirt_uri }}"
+    pool: "{{ libvirt_pool }}"
+    command: create
+    clone_source: "{{ os_base_volumes[vm.os] }}"
+    xml: |
+      <volume type='file'>
+        <name>{{ vm.name }}-os.qcow2</name>
+        <capacity unit='G'>{{ vm.os_disk_gb }}</capacity>
+        <target><format type='qcow2'/></target>
+      </volume>
+
+- name: Create data disks
+  community.libvirt.virt_volume:
+    uri: "{{ libvirt_uri }}"
+    pool: "{{ libvirt_pool }}"
+    command: create
+    xml: |
+      <volume type='file'>
+        <name>{{ vm.name }}-{{ item.name }}.qcow2</name>
+        <capacity unit='G'>{{ item.size_gb }}</capacity>
+        <target><format type='qcow2'/></target>
+      </volume>
+  loop: "{{ vm.data_disks }}"
+
+# Cloud-Init Daten rendern
+- name: Render USERDATA (Distro-spezifisch)
+  ansible.builtin.set_fact:
+    ci_userdata: >-
+      {{ lookup('template', 'cloud_init_' + vm.os + '.yaml.j2',
+                convert_data=True,
+                template_vars={
+                  'hostname': vm.hostname,
+                  'domain': 'matrix.lan',
+                  'ssh_public_key': ssh_public_key
+                }) }}
+
+- name: Build METADATA + NETWORK_CONFIG
+  ansible.builtin.set_fact:
+    ci_metadata:
+      local-hostname: "{{ vm.hostname }}"
+    ci_netcfg:
+      version: 2
+      ethernets:
+        eth0:
+          addresses: ["{{ vm.ip_prefix }}.{{ vm.ip_octet }}/24"]
+          gateway4: "{{ vm.ip_prefix }}.1"
+          nameservers:
+            addresses: ["{{ vm.ip_prefix }}.1","1.1.1.1"]
+
+- name: Create cloud-init CIDATA ISO in pool
+  community.libvirt.virt_volume:
+    uri: "{{ libvirt_uri }}"
+    pool: "{{ libvirt_pool }}"
+    command: create_cidata_cdrom
+    name: "{{ vm.name }}-cidata.iso"
+    cloudinit_config:
+      METADATA: "{{ ci_metadata }}"
+      USERDATA: "{{ ci_userdata }}"
+      NETWORK_CONFIG: "{{ ci_netcfg }}"
+
+- name: Define domain from XML
+  community.libvirt.virt:
+    uri: "{{ libvirt_uri }}"
+    command: define
+    autostart: "{{ autostart_vms }}"
+    xml: "{{ lookup('template', 'vm.xml.j2',
+           template_vars={
+             'vm': vm,
+             'libvirt_network': libvirt_network,
+             'pool_path': libvirt_pool_path,
+             'root_disk_bus': root_disk_bus,
+             'cdrom_bus': cdrom_bus,
+             'graphics_type': graphics_type,
+             'data_disk_letters': data_disk_letters
+           }) }}"
+
+- name: Ensure VM running
+  community.libvirt.virt:
+    uri: "{{ libvirt_uri }}"
+    name: "{{ vm.name }}"
+    state: running
+
+...

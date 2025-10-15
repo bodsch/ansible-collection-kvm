@@ -1,0 +1,14 @@
+
+##################################################################
+#
+# Auditing
+#
+{% if values.audit_level is defined and
+      values.audit_level | string | length > 0 and
+      (values.audit_level | int >= 0 or
+      values.audit_level | int <= 2) %}
+audit_level               = {{ values.audit_level }}
+{% endif %}
+{% if values.audit_level is defined %}
+audit_logging             = {{ values.audit_logging | bool | ternary('1', '0') }}
+{% endif %}

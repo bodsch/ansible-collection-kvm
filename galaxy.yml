@@ -1,0 +1,47 @@
+---
+namespace: bodsch
+name: kvm
+
+version: 0.0.1
+
+readme: README.md
+
+authors:
+  - Bodo Schulz <bodo@boone-schulz.de>
+
+description: collection of core modules for my ansible roles
+
+license:
+  - Apache-2.0
+
+license_file: ''
+
+tags:
+  - kvm
+  - qemu
+  - virtualisation
+
+dependencies:
+ ansible.utils: "*"
+ ansible.posix: "*"
+ community.general: ">=10.5"
+ community.libvirt: ">=2.0"
+ bodsch.core: "*"
+
+repository: https://github.com/bodsch/ansible-collection-kvm
+documentation: https://github.com/bodsch/ansible-collection-kvm/README.md
+homepage: https://github.com/bodsch/ansible-collection-kvm
+issues: https://github.com/bodsch/ansible-collection-kvm/issues
+
+build_ignore:
+  - "galaxy.yml"
+  - "*.pyc"
+  - "*.retry"
+  - ".ansible-lint"
+  - ".editorconfig"
+  - ".flake8"
+  - ".gitignore"
+  - ".yamllint"
+  - ".github"
+  - ".config"
+  - ".ansible"

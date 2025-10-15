@@ -1,0 +1,53 @@
+
+{% if libvirt_qemu.misc is defined and
+      libvirt_qemu.misc | count > 0 %}
+  {% if libvirt_qemu.misc.dump_guest_core is defined and
+        libvirt_qemu.misc.dump_guest_core | string | length > 0 %}
+dump_guest_core               = {{ libvirt_qemu.misc.dump_guest_core | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.misc.mac_filter is defined and
+        libvirt_qemu.misc.mac_filter | string | length > 0 %}
+mac_filter                    = {{ libvirt_qemu.misc.mac_filter | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.misc.relaxed_acs_check is defined and
+        libvirt_qemu.misc.relaxed_acs_check | string | length > 0 %}
+relaxed_acs_check             = {{ libvirt_qemu.misc.relaxed_acs_check | bool | ternary('1', '0') }}
+  {% endif %}
+  {% if libvirt_qemu.misc.lock_manager is defined and
+        libvirt_qemu.misc.lock_manager | string | length > 0 and
+        libvirt_qemu.misc.lock_manager in ["sanlock","lockd"] %}
+lock_manager                  = "{{ libvirt_qemu.misc.lock_manager }}"
+  {% endif %}
+{% endif %}
+{#
+# Determine if guest RAM is included in QEMU core dumps. By
+# default guest RAM will be excluded if a new enough QEMU is
+# present. Setting this to '1' will force guest RAM to always
+# be included in QEMU core dumps.
+#
+# This setting will be ignored if the guest XML has set the
+# dumpcore attribute on the <memory> element.
+#
+#dump_guest_core = 1
+
+# mac_filter enables MAC addressed based filtering on bridge ports.
+# This currently requires ebtables to be installed.
+#
+#mac_filter = 1
+
+
+# By default, PCI devices below non-ACS switch are not allowed to be assigned
+# to guests. By setting relaxed_acs_check to 1 such devices will be allowed to
+# be assigned to guests.
+#
+#relaxed_acs_check = 1
+
+
+# In order to prevent accidentally starting two domains that
+# share one writable disk, libvirt offers two approaches for
+# locking files. The first one is sanlock, the other one,
+# virtlockd, is then our own implementation. Accepted values
+# are "sanlock" and "lockd".
+#
+#lock_manager = "lockd"
+#}

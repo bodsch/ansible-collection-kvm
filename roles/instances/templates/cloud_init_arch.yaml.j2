@@ -1,0 +1,27 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+#cloud-config
+hostname: {{ hostname }}
+fqdn: {{ hostname }}.matrix.lan
+manage_etc_hosts: true
+timezone: Europe/Berlin
+
+package_update: true
+package_upgrade: true
+packages: [qemu-guest-agent, curl, vim]
+
+ssh_pwauth: false
+disable_root: true
+
+users:
+  - name: admin
+    groups: [wheel]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - {{ ssh_public_key | quote }}
+
+runcmd:
+  - systemctl enable --now systemd-networkd systemd-resolved
+  - test -L /etc/resolv.conf || ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+  - systemctl enable --now qemu-guest-agent

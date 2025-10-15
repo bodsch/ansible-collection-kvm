@@ -1,0 +1,137 @@
+---
+
+libvirt_service: {}
+#   libvirtd_args: []                                   # '--timeout 120' | --listen | ...
+#   qemu_audio_drv: ""                                  # sdl
+#   sdl_audiodriver: ""                                 # pulse
+#   #
+#   start_libvirtd: ""                                  #
+#   mount_cgroups: ""                                   #
+#   cgroups:  []                                        #
+
+# https://libvirt.org/daemons.html#monolithic-vs-modular-daemons
+libvirt_daemons: {}
+#   ch:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: stopped
+#       enabled: false
+#   interface:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: started
+#       enabled: true
+#   lock:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: stopped
+#       enabled: false
+#   log:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: started
+#       enabled: true
+#   lxc:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: stopped
+#       enabled: false
+#   network:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: started
+#       enabled: true
+#   nodedev:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: started
+#       enabled: true
+#   nwfilter:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: started
+#       enabled: true
+#   proxy:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: stopped
+#       enabled: false
+#   qemu:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: started
+#       enabled: true
+#   secret:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: started
+#       enabled: true
+#   storage:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: started
+#       enabled: true
+#   vbox:
+#     service:
+#       state: stopped
+#       enabled: false
+#     socket:
+#       state: stopped
+#       enabled: false
+
+libvirt_ch: {}
+libvirt_interface: {}
+libvirt_lock: {}
+libvirt_log: {}
+libvirt_login_shell: {}
+libvirt_lxc: {}
+libvirt_network: {}
+libvirt_nodedev: {}
+libvirt_nwfilter: {}
+libvirt_proxy: {}
+libvirt_qemu: {}
+libvirt_secret: {}
+libvirt_storage: {}
+libvirt_vbox: {}
+
+libvirt_virtual_networks: []
+
+libvirt_storage_pools: []
+
+# monolithic
+# libvirt_libvirtd: {}
+
+# libvirt_qemu: {}
+
+# libvirt_network: {}
+  # Supported settings:
+  #
+  #  iptables - use iptables commands to construct the firewall
+  #  nftables - use nft commands to construct the firewall
+  # firewall_backend: "iptables"
+
+...

@@ -180,7 +180,7 @@
     hold: 2
 
 - name: disable monolithic daemons
-  bodsch.kvm.libvirt_services:
+  bodsch.kvm.monolithic_services:
     state: disable
     units:
       - libvirtd.service
@@ -199,13 +199,16 @@
   no_log: true
 
 - name: enable modular daemon sockets
-  bodsch.kvm.libvirt_services:
+  bodsch.kvm.modular_services:
     state: enable
     units: "{{ libvirt_daemons | bodsch.kvm.modular_daemons(only_sockets=True) }}"
   register: _service_states
   # ignore_errors: true
   notify:
     - daemon-reload
-
-- name: flush handlers
-  ansible.builtin.meta: flush_handlers
+#
+# # libvirtd.socket
+#
+# - name: flush handlers
+#   ansible.builtin.meta: flush_handlers
+#

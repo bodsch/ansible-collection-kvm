@@ -24,11 +24,8 @@
     - not ansible_check_mode
     - ansible_service_mgr | lower == "systemd"
 
-
-
-
-- name: configure storage pools
-  ansible.builtin.include_tasks: configure/libvirt_storage_pools.yml
-  when:
-    - libvirt_storage_pools is defined
-    - libvirt_storage_pools | default([]) | count > 0
+# - name: configure storage pools
+#   ansible.builtin.include_tasks: configure/libvirt_storage_pools.yml
+#   when:
+#     - libvirt_storage_pools is defined
+#     - libvirt_storage_pools | default([]) | count > 0

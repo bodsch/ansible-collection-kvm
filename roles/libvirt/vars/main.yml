@@ -36,8 +36,8 @@ libvirt_defaults_daemons:
       state: stopped
       enabled: false
     socket:
-      state: stopped
-      enabled: false
+      state: started
+      enabled: true
   log:
     service:
       state: stopped

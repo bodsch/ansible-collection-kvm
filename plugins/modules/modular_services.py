@@ -31,13 +31,31 @@ class LibvirtModular(LibvirtService):
         self.units = module.params.get("units")
 
         self.modular=[
-            "virtbhyved.socket",
+            "virtchd.service",
+            "virtinterfaced.service",
+            "virtlockd.service",
+            "virtlogd.service",
+            "virtlxcd.service",
+            "virtnetworkd.service",
+            "virtnodedevd.service",
+            "virtnwfilterd.service",
+            "virtproxyd.service",
+            "virtqemud.service",
+            "virtsecretd.service",
+            "virtstoraged.service",
+            "virtvboxd.service",
+            "virtchd-admin.socket",
+            "virtchd-ro.socket",
+            "virtchd.socket",
             "virtinterfaced-admin.socket",
             "virtinterfaced-ro.socket",
             "virtinterfaced.socket",
             "virtlockd-admin.socket",
+            "virtlockd.socket",
             "virtlogd-admin.socket",
-            "virtlogd-ro.socket",
+            "virtlogd.socket",
+            "virtlxcd-admin.socket",
+            "virtlxcd-ro.socket",
             "virtlxcd.socket",
             "virtnetworkd-admin.socket",
             "virtnetworkd-ro.socket",
@@ -52,6 +70,7 @@ class LibvirtModular(LibvirtService):
             "virtproxyd-ro.socket",
             "virtproxyd-tcp.socket",
             "virtproxyd-tls.socket",
+            "virtproxyd.socket",
             "virtqemud-admin.socket",
             "virtqemud-ro.socket",
             "virtqemud.socket",
@@ -61,14 +80,10 @@ class LibvirtModular(LibvirtService):
             "virtstoraged-admin.socket",
             "virtstoraged-ro.socket",
             "virtstoraged.socket",
+            "virtvboxd-admin.socket",
+            "virtvboxd-ro.socket",
             "virtvboxd.socket",
-            "virtxend.socket",
-            # ".socket",
-            # ".socket",
-            # ".socket",
-            # ".socket",
-            # ".socket",
-            ]
+        ]
 
         super().__init__(module)
 
@@ -88,19 +103,27 @@ class LibvirtModular(LibvirtService):
 
         _modular_services = {u.name: dict(enabled=u.unit_file_state, active=u.active_state, masked=u.is_masked) for u in _verifyed_services if u.name in self.modular}
 
-        self.module.log(f" - modular services: {_modular_services}")
-
+        # self.module.log(f" - modular services: {_modular_services}")
         # if self.state == "verify":
         #     return self.__verify_services()
         #
         # if self.state == "disable":
         #     result_state = self.__disable_services()
-        #
-        # if self.state == "enable":
-        #     result_state = self.__enable_services()
-        #
-        # if self.state == "start":
-        #     result_state = self.__start_services()
+
+        if self.state == "enable":
+            _not_masked_services = [x for x,v in _modular_services.items() if v.get('masked', True)]
+            _not_active_services = [x for x,v in _modular_services.items() if v.get('enabled', "disabled") == "disabled" or v.get("active", "active") == "inactive"]
+
+            if len(_not_masked_services) != 0:
+                self.module.log(f" - not masked modular services: {_not_masked_services}")
+
+            if len(_not_active_services) != 0:
+                self.module.log(f" - not active modular services: {_not_active_services}")
+
+            result_state = self.__enable_services(_not_active_services)
+
+        if self.state == "start":
+            result_state = self.__start_services(_modular_services)
 
         try:
             _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
@@ -202,102 +225,93 @@ class LibvirtModular(LibvirtService):
             msg="all monolithic service stopped and disabled."
         )
 
-    def __enable_services(self):
+    def __enable_services(self, services: list = []):
         """ ... """
-        self.module.log("LibvirtMonolit::__enable_services()")
+        self.module.log(f"LibvirtModular::__enable_services(services: {services})")
 
         result_state = []
         service_matches = []
 
         self.module.log("unit files:")
-        for u in self.units:
+        for u in services:
             self.module.log(f"  - {u}")
+
+        service_matches = self.systemd_services(
+            user_manager=False,
+            services=services,
+            service_types=["service", "socket"],
+            include_inactive=True
+        )
+
+        # self.module.log(f"service matches: {service_matches}")
+        # {'libvirtd.service': {'enabled': 'enabled', 'active': 'inactive'}, 'libvirtd.socket': {'enabled': 'enabled', 'active': 'active'}}
+        _states  = {u.name: dict(masked=u.is_masked, enabled=u.unit_file_state, active=u.active_state) for u in service_matches if u.name in self.units}
+
+        # modular = self.any_effectively_enabled(_states)
+
+        # self.module.log(f"states : {_states}")
+        # self.module.log(f"modular: {modular}")
 
         with SystemdClient(user_manager=False) as sd:
             try:
-                service_matches = sd.match_units(
-                  patterns=self.units,
-                  types=["service", "socket"],
-                  include_inactive_files=True
-                )
-                # self.module.log(f"{service_matches}")
+
+                for srv, data in _states.items():
+                    self.module.log(f"- service: {srv} - {data}")
+                    res = {}
+
+                    if sd.exists(srv):
+                        _unmasked = False
+                        _enabled = False
+                        _changed = False
+
+                        unit_state = data.get("enabled", "enabled")
+                        active_state = data.get('active', 'active')
+                        active_masked = data.get('masked', True)
+
+                        # self.module.log(f"   unit state   : '{unit_state}'")
+                        # self.module.log(f"   active state : '{active_state}'")
+                        # self.module.log(f"   active mask  : '{active_masked}'")
+
+                        if active_masked:
+                            try:
+                                _unmasked, _ = sd.unmask([srv])
+                                self.module.log(f"  - unmask: {_unmasked}")
+                                _changed = True
+
+                            except UnitNotFoundError:
+                                self.module.log("unknown")
+
+                        if not unit_state == "enabled":
+                            try:
+                                _enabled, _ = sd.enable([srv], runtime=True)
+                                self.module.log(f"  - enable: {_enabled}")
+                                _changed = True
+
+                            except UnitNotFoundError:
+                                self.module.log("unknown")
+
+                        res[srv] = dict(
+                            changed=_changed,
+                            unmasked=_unmasked,
+                            enabled=_enabled,
+                        )
+                    else:
+                        res[srv] = dict(
+                            changed=False,
+                            failed=True,
+                            msg="service not exists."
+                        )
+
+                    result_state.append(res)
 
             except UnitNotFoundError:
                 self.module.log("unknown")
 
-            self.module.log(f"service matches: {service_matches}")
-
-            # {'libvirtd.service': {'enabled': 'enabled', 'active': 'inactive'}, 'libvirtd.socket': {'enabled': 'enabled', 'active': 'active'}}
-            _states  = {u.name: dict(masked=u.is_masked, enabled=u.unit_file_state, active=u.active_state) for u in service_matches if u.name in self.units}
-
-            # modular = self.any_effectively_enabled(_states)
-
-            self.module.log(f"states : {_states}")
-            # self.module.log(f"modular: {modular}")
-
-            for srv, data in _states.items():
-                self.module.log(f"- service: {srv} - {data}")
-                res = {}
-
-                if sd.exists(srv):
-                    _unmasked = False
-                    _enabled = False
-                    _changed = False
-
-                    unit_state = data.get("enabled", "enabled")
-                    active_state = data.get('active', 'active')
-                    active_masked = data.get('masked', True)
-
-                    self.module.log(f"   unit state   : '{unit_state}'")
-                    self.module.log(f"   active state : '{active_state}'")
-                    self.module.log(f"   active mask  : '{active_masked}'")
-
-                    if active_masked:
-                        try:
-                            _unmasked, _ = sd.unmask([srv])
-                            self.module.log(f"unmask: {_unmasked}")
-                            _changed = True
-
-                        except UnitNotFoundError:
-                            self.module.log("unknown")
-
-                    if not active_state == "active":
-                        try:
-                            _enabled, _ = sd.enable([srv])
-                            self.module.log(f"activate: {_enabled}")
-                            _changed = True
-
-                        except UnitNotFoundError:
-                            self.module.log("unknown")
-
-                    res[srv] = dict(
-                        changed=_changed,
-                        unmasked=_unmasked,
-                        enabled=_enabled,
-                    )
-                else:
-                    res[srv] = dict(
-                        changed=False,
-                        failed=True,
-                        msg="service not exists."
-                    )
-
-                result_state.append(res)
-
         return result_state
 
-        return dict(
-            failed=False,
-            msg="all modular service are enables."
-        )
-
-        return dict(
-            failed=True,
-        )
-
-    def __start_services(self):
+    def __start_services(self, services: list = []):
         """ ... """
-        self.module.log("LibvirtMonolit::__start_services()")
+        self.module.log(f"LibvirtModular::__start_services(services: {services})")
 
         result_state = []
         service_matches = []
@@ -305,7 +319,7 @@ class LibvirtModular(LibvirtService):
         with SystemdClient(user_manager=False) as sd:
             try:
                 service_matches = sd.match_units(
-                  patterns=self.units,
+                  patterns=services,
                   types=["service", "socket"],
                   include_inactive_files=True
                 )
@@ -352,18 +366,6 @@ class LibvirtModular(LibvirtService):
         return result_state
 
 
-        _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
-
-        result = dict(
-            changed=_changed,
-            failed=False,
-            state=result_state
-        )
-
-        return result
-
-
-
 def main():
     """
     """
@@ -393,7 +395,7 @@ def main():
     k = LibvirtModular(module)
     result = k.run()
 
-    module.log(msg=f"= result: {result}")
+    # module.log(msg=f"= result: {result}")
 
     module.exit_json(**result)
 

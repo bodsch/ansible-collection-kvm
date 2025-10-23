@@ -8,4 +8,23 @@
   register: result
   until: result is successful
 
+- name: detect libvirtd version
+  become: true
+  bodsch.kvm.libvirtd_version:
+  register: _libvirtd_version
+
+- name: set libvirtd version
+  ansible.builtin.set_fact:
+    libvirtd_version: '{{ _libvirtd_version.version }}'
+  when:
+    - _libvirtd_version is defined
+    - _libvirtd_version.version is defined
+    - _libvirtd_version.version | string | length > 0
+
+- name: create custom fact file
+  bodsch.core.facts:
+    name: libvirtd
+    facts:
+      version: "{{ libvirtd_version }}"
+
 ...

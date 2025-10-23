@@ -143,9 +143,15 @@ class FilterModule(object):
             Filtert pro Top-Level-Key nur die Untermappings (z.B. 'socket'),
             deren 'enabled' True ist. Entfernt Top-Level-Keys ohne Treffer.
         """
-        return {
+        display.v(f"only_enabled({d})")
+
+        result = {
             k: {ik: iv for ik, iv in v.items()
                 if isinstance(iv, dict) and iv.get('enabled') is True}
             for k, v in d.items()
             if any(isinstance(iv, dict) and iv.get('enabled') is True for iv in v.values())
         }
+
+        display.v(f"= result {result}")
+
+        return result

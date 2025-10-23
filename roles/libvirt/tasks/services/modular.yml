@@ -1,7 +1,7 @@
 ---
 
 - name: enable modular daemon services
-  bodsch.kvm.libvirt_services:
+  bodsch.kvm.modular_services:
     state: enable
     units: "{{ libvirt_daemons | bodsch.kvm.modular_daemons(only_services=True) }}"
   register: _service_states
@@ -46,7 +46,7 @@
         libvirt_proxy_daemons_service: "{{ libvirt_daemons | bodsch.kvm.libvirt_proxy_daemons(config=libvirt_proxy, only_services=True) }}"
 
     - name: enable modular proxy services
-      bodsch.kvm.libvirt_services:
+      bodsch.kvm.modular_services:
         state: enable
         units: "{{ libvirt_proxy_daemons }}"
       register: _service_states
@@ -54,7 +54,7 @@
         - daemon-reload
 
     - name: start modular proxy services
-      bodsch.kvm.libvirt_services:
+      bodsch.kvm.modular_services:
         state: start
         units: "{{ libvirt_proxy_daemons_service }}"
       register: _service_states

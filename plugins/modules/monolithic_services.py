@@ -84,7 +84,6 @@ class LibvirtMonolitic(LibvirtService):
             self.module.log(f"error: {e}")
             return result_state
 
-
     def __verify_services(self):
         """ ... """
         self.module.log("LibvirtMonolitic::__verify_services()")
@@ -453,7 +452,7 @@ def main():
     k = LibvirtMonolitic(module)
     result = k.run()
 
-    module.log(msg=f"= result: {result}")
+    # module.log(msg=f"= result: {result}")
 
     module.exit_json(**result)
 

@@ -44,8 +44,9 @@ class LibvirtService:
             include_inactive=include_inactive
         )
 
+        # self.module.log(f"name: {'Name':27} kind: {'Kind':7} state (active): {'state active':10} state (sub): {r.sub_state:8} masked: {r.is_masked} state: {(r.unit_file_state or '-'):10} {(r.load_state or '-'):10} {r.description}")
         for r in service_matches:
-            self.module.log(f"name: {r.name:25} kind: {r.kind:7} state (active): {r.active_state:10} state (sub): {r.sub_state:8} masked: {r.is_masked} {(r.unit_file_state or '-'):10} {(r.load_state or '-'):10} {r.description}")
+            self.module.log(f"name: {r.name:27} kind: {r.kind:7} state (active / sub): {r.active_state:8} / {r.sub_state:8} masked: {r.is_masked:7} state: {(r.unit_file_state or '-'):10}") # {(r.load_state or '-'):10} {r.description}")
 
         return service_matches
 

@@ -13,51 +13,83 @@
   loop_control:
     label: "{{ item.path }}"
 
-- name: defining storage pools
-  become: true
-  community.libvirt.virt_pool:
-    command: define
-    name: "{{ item.name }}"
-    xml: "{{ lookup('template', 'etc/libvirt/storage/pool.xml.j2') }}"
-  register: libvirt_pools_defined
-  loop: "{{ libvirt_storage_pools }}"
-  loop_control:
-    label: "{{ item.name }}"
-
-- name: setting state of storage pools
-  become: true
-  community.libvirt.virt_pool:
-    name: "{{ item.name }}"
-    state: "{{ item.state }}"
+- name: handle storage pools
   when:
-    - item.state is defined
-  loop: "{{ libvirt_storage_pools }}"
-  loop_control:
-    label: "{{ item.name }} - state {{ item.state }}"
+    - libvirt_storage_pools | default([]) | count > 0
+  block:
+    - name: enable virtproxyd daemon
+      bodsch.kvm.modular_services:
+        state: enable
+        units:
+          - virtproxyd.socket
+          - virtqemud.socket
+          - virtstoraged.socket
+      register: _service_states
+      # ignore_errors: true
+      notify:
+        - daemon-reload
 
-- name: setting storage pools to autostart
-  community.libvirt.virt_pool:
-    autostart: true
-    name: "{{ item.name }}"
-  become: true
-  when:
-    - item.autostart is defined
-    - item.autostart
-    - (item.state | default("")) == "active"
-  loop: "{{ libvirt_storage_pools }}"
-  loop_control:
-    label: "{{ item.name }} - state: {{ item.state }}, autostart: {{ item.autostart }}"
+    - name: start virtproxyd socket
+      bodsch.kvm.modular_services:
+        state: start
+        units:
+          - virtproxyd.socket
+          - virtqemud.socket
+          - virtstoraged.socket
+      register: _service_states
+      notify:
+        - daemon-reload
 
-- name: remove storage pool from autostart
-  community.libvirt.virt_pool:
-    autostart: false
-    name: "{{ item.name }}"
-  become: true
-  when:
-    - item.autostart is defined
-    - not item.autostart
-  loop: "{{ libvirt_storage_pools }}"
-  loop_control:
-    label: "{{ item.name }} - state: {{ item.state }}, autostart: {{ item.autostart }}"
+    # wait for ...
+    #  - /run/libvirt/virtlockd-sock
+    #  - /run/libvirt/virtqemud-sock
+    #  - /run/libvirt/virtstoraged-sock
+
+    - name: defining storage pools
+      become: true
+      community.libvirt.virt_pool:
+        command: define
+        name: "{{ item.name }}"
+        xml: "{{ lookup('template', 'etc/libvirt/storage/pool.xml.j2') }}"
+      register: libvirt_pools_defined
+      loop: "{{ libvirt_storage_pools }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: setting state of storage pools
+      become: true
+      community.libvirt.virt_pool:
+        name: "{{ item.name }}"
+        state: "{{ item.state }}"
+      when:
+        - item.state is defined
+      loop: "{{ libvirt_storage_pools }}"
+      loop_control:
+        label: "{{ item.name }} - state {{ item.state }}"
+
+    - name: setting storage pools to autostart
+      community.libvirt.virt_pool:
+        autostart: true
+        name: "{{ item.name }}"
+      become: true
+      when:
+        - item.autostart is defined
+        - item.autostart
+        - (item.state | default("")) == "active"
+      loop: "{{ libvirt_storage_pools }}"
+      loop_control:
+        label: "{{ item.name }} - state: {{ item.state }}, autostart: {{ item.autostart }}"
+
+    - name: remove storage pool from autostart
+      community.libvirt.virt_pool:
+        autostart: false
+        name: "{{ item.name }}"
+      become: true
+      when:
+        - item.autostart is defined
+        - not item.autostart
+      loop: "{{ libvirt_storage_pools }}"
+      loop_control:
+        label: "{{ item.name }} - state: {{ item.state }}, autostart: {{ item.autostart }}"
 
 ...

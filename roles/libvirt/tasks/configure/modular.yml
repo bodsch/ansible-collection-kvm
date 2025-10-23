@@ -209,6 +209,6 @@
 #
 # # libvirtd.socket
 #
-# - name: flush handlers
-#   ansible.builtin.meta: flush_handlers
-#
+- name: flush handlers
+  ansible.builtin.meta: flush_handlers
+

@@ -16,11 +16,22 @@ class FilterModule(object):
 
     def filters(self):
         return {
+            'combine_monolithic': self.combine_for_monolithic,
             'security_drivers': self.security_drivers,
             'cgroup_controllers': self.cgroup_controllers,
             'modular_daemons': self.modular_daemons,
             'libvirt_proxy_daemons': self.libvirt_proxy_daemons,
         }
+
+    def combine_for_monolithic(self, data, config):
+        """
+        """
+        display.v(f"combine_for_monolithic({data}, {config}")
+
+
+
+        return {}
+
 
     def security_drivers(self, data, default=["selinux", "apparmor"]):
         """

@@ -17,28 +17,42 @@
   when:
     - libvirt_storage_pools | default([]) | count > 0
   block:
-    - name: enable virtproxyd daemon
-      bodsch.kvm.modular_services:
-        state: enable
-        units:
-          - virtproxyd.socket
-          - virtqemud.socket
-          - virtstoraged.socket
-      register: _service_states
-      # ignore_errors: true
-      notify:
-        - daemon-reload
+    - name: modular services
+      when:
+        - libvirtd_version is version_compare("10", operator='>')
+      block:
+        - name: enable virtproxyd daemon
+          bodsch.kvm.modular_services:
+            state: enable
+            units:
+              - virtproxyd.socket
+              - virtqemud.socket
+              - virtstoraged.socket
+          register: _service_states
+          # ignore_errors: true
+          notify:
+            - daemon-reload
 
-    - name: start virtproxyd socket
-      bodsch.kvm.modular_services:
-        state: start
-        units:
-          - virtproxyd.socket
-          - virtqemud.socket
-          - virtstoraged.socket
-      register: _service_states
-      notify:
-        - daemon-reload
+        - name: start virtproxyd socket
+          bodsch.kvm.modular_services:
+            state: start
+            units:
+              - virtproxyd.socket
+              - virtqemud.socket
+              - virtstoraged.socket
+          register: _service_states
+          notify:
+            - daemon-reload
+
+    - name: monolithic services
+      when:
+        - libvirtd_version is version_compare("10", operator='<')
+      block:
+        - name: start monolithic libvirtd
+          become: true
+          ansible.builtin.service:
+            name: libvirtd
+            state: started
 
     # wait for ...
     #  - /run/libvirt/virtlockd-sock

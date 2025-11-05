@@ -2,7 +2,23 @@
 
 - name: merge libvirt config configuration between defaults and custom
   ansible.builtin.set_fact:
-    libvirt_libvirtd: "{{ libvirt_defaults_libvirtd | combine(libvirt_libvirtd, recursive=True) }}"
+    libvirt_libvirtd: "{{ libvirt_defaults_libvirtd | combine(libvirt_libvirtd, recursive=True)}}"
+#       network=libvirt_network,
+#       sockets=libvirt_libvirtd,
+#       authentication=None,
+#       x509_certificate=None,
+#       authorization=None,
+#       processing=None,
+#       logging=None,
+#       auditing=None,
+#       uuid=None,
+#       keepalive=None,
+#       open_vswitch=None) }}"
+    libvirt_service: "{{ _monolitic_service | default({}) | combine( { 'name': 'libvirtd' } ) }}"
+
+- name: d
+  debug:
+    msg: "{{ libvirt_service }}"
 
 - name: create libvirtd.conf
   become: true

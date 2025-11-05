@@ -18,11 +18,19 @@
 #   notify:
 #     - restart {{ libvirt_service.name }}
 
+- name: configure monolithic services
+  ansible.builtin.include_tasks: configure/monolithic.yml
+  when:
+    - not ansible_check_mode
+    - ansible_service_mgr | lower == "systemd"
+    - libvirtd_version is version_compare("10", operator='<')
+
 - name: configure modular services
   ansible.builtin.include_tasks: configure/modular.yml
   when:
     - not ansible_check_mode
     - ansible_service_mgr | lower == "systemd"
+    - libvirtd_version is version_compare("10", operator='>')
 
 - name: configure storage pools
   ansible.builtin.include_tasks: configure/libvirt_storage_pools.yml

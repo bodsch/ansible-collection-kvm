@@ -4,28 +4,60 @@
   when:
     - libvirt_virtual_networks | default([]) | count > 0
   block:
-    - name: enable virtproxyd daemon
-      bodsch.kvm.modular_services:
-        state: enable
-        units:
-          - virtnetworkd.socket
-          # - virtqemud.socket
-          # - virtstoraged.socket
-      register: _service_states
-      # ignore_errors: true
-      notify:
-        - daemon-reload
+    - name: modular services
+      when:
+        - libvirtd_version is version_compare("10", operator='>')
+      block:
+        - name: enable virtproxyd daemon
+          bodsch.kvm.modular_services:
+            state: enable
+            units:
+              - virtnetworkd.socket
+          register: _service_states
+          # ignore_errors: true
+          notify:
+            - daemon-reload
 
-    - name: start virtproxyd socket
-      bodsch.kvm.modular_services:
-        state: start
-        units:
-          - virtnetworkd.socket
-          # - virtqemud.socket
-          # - virtstoraged.socket
-      register: _service_states
-      notify:
-        - daemon-reload
+        - name: start virtproxyd socket
+          bodsch.kvm.modular_services:
+            state: start
+            units:
+              - virtnetworkd.socket
+          register: _service_states
+          notify:
+            - daemon-reload
+
+    - name: monolithic services
+      when:
+        - libvirtd_version is version_compare("10", operator='<')
+      block:
+
+        - name: enable / disable libvirtd-tcp.socket
+          become: true
+          ansible.builtin.service:
+            name: libvirtd-tcp.socket
+            enabled: "{{ 'true' if libvirt_libvirtd.enable_tcp else 'false' }}"
+          failed_when: false
+          notify:
+            - restart libvirtd-tcp.socket
+          when:
+            - not ansible_check_mode
+            - ansible_service_mgr | lower == "systemd"
+
+        - name: enable / disable libvirtd-tls.socket
+          become: true
+          ansible.builtin.service:
+            name: libvirtd-tls.socket
+            enabled: "{{ 'true' if libvirt_libvirtd.enable_tls else 'false' }}"
+          failed_when: false
+          notify:
+            - restart libvirtd-tls.socket
+          when:
+            - not ansible_check_mode
+            - ansible_service_mgr | lower == "systemd"
+
+
+
 
     # wait for ...
     #  - /run/libvirt/virtnetworkd-sock

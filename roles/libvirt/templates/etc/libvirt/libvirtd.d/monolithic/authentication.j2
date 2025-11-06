@@ -1,0 +1,23 @@
+
+#################################################################
+#
+# Authentication.
+#
+{% if libvirt_libvirtd.auth_unix_ro is defined and
+      libvirt_libvirtd.auth_unix_ro | string | length > 0 and
+      libvirt_libvirtd.auth_unix_ro in ["none","sasl","polkit"] %}
+auth_unix_ro              = "{{ libvirt_libvirtd.auth_unix_ro }}"
+{% endif %}
+{% if libvirt_libvirtd.auth_unix_rw is defined and
+      libvirt_libvirtd.auth_unix_rw | string | length > 0 and
+      libvirt_libvirtd.auth_unix_rw in ["none","sasl","polkit"] %}
+auth_unix_rw              = "{{ libvirt_libvirtd.auth_unix_rw }}"
+{% endif %}
+{% if libvirt_libvirtd.auth_tcp is defined and
+      libvirt_libvirtd.auth_tcp | string | length > 0 %}
+auth_tcp                  = "{{ libvirt_libvirtd.auth_tcp }}"
+{% endif %}
+{% if libvirt_libvirtd.auth_tls is defined and
+      libvirt_libvirtd.auth_tls | string | length > 0 %}
+auth_tls                  = "{{ libvirt_libvirtd.auth_tls }}"
+{% endif %}

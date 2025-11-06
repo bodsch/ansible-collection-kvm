@@ -1,0 +1,20 @@
+
+###################################################################
+# Keepalive protocol:
+#
+{% if libvirt_libvirtd.keepalive_interval is defined and
+      libvirt_libvirtd.keepalive_interval | string | length > 0 %}
+keepalive_interval        = {{ libvirt_libvirtd.keepalive_interval }}
+{% endif %}
+{% if libvirt_libvirtd.keepalive_count is defined and
+      libvirt_libvirtd.keepalive_count | string | length > 0 %}
+keepalive_count           = {{ libvirt_libvirtd.keepalive_count }}
+{% endif %}
+{% if libvirt_libvirtd.admin_keepalive_interval is defined and
+      libvirt_libvirtd.admin_keepalive_interval | string | length > 0 %}
+admin_keepalive_interval  = {{ libvirt_libvirtd.admin_keepalive_interval }}
+{% endif %}
+{% if libvirt_libvirtd.admin_keepalive_count is defined and
+      libvirt_libvirtd.admin_keepalive_count | string | length > 0 %}
+admin_keepalive_count     = {{ libvirt_libvirtd.admin_keepalive_count }}
+{% endif %}

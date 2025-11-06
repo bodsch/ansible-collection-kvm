@@ -1,0 +1,28 @@
+# Network connectivity controls
+#
+{% if libvirt_libvirtd.enable_tls is defined and
+      libvirt_libvirtd.enable_tls %}
+listen_tls                = {{ libvirt_libvirtd.enable_tls | bool | ternary('1', '0') }}
+  {% if libvirt_libvirtd.tls_port is defined and
+        libvirt_libvirtd.tls_port | string | length > 0 and
+        libvirt_libvirtd.tls_port | int > 0 %}
+tls_port                  = "{{ libvirt_libvirtd.tls_port }}"
+  {% endif %}
+{% endif %}
+{% if libvirt_libvirtd.enable_tcp is defined and
+      libvirt_libvirtd.enable_tcp %}
+listen_tcp                = {{ libvirt_libvirtd.enable_tcp | bool | ternary('1', '0') }}
+  {% if libvirt_libvirtd.tcp_port is defined and
+        libvirt_libvirtd.tcp_port | string | length > 0 and
+        libvirt_libvirtd.tcp_port | int > 0 %}
+tcp_port                  = "{{ libvirt_libvirtd.tcp_port }}"
+  {% endif %}
+{% endif %}
+{% if libvirt_libvirtd.listen_addr is defined and
+      libvirt_libvirtd.listen_addr | string | length > 0 %}
+listen_addr               = "{{ libvirt_libvirtd.listen_addr }}"
+{% endif %}
+{% if libvirt_libvirtd.enable_mdns is defined and
+      libvirt_libvirtd.enable_mdns %}
+mdns_adv                  = {{ libvirt_libvirtd.enable_mdns | bool | ternary('1', '0') }}
+{% endif %}

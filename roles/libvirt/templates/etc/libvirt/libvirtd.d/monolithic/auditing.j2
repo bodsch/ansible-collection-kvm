@@ -1,0 +1,13 @@
+##################################################################
+#
+# Auditing
+#
+{% if libvirt_libvirtd.audit_level is defined and
+      libvirt_libvirtd.audit_level | string | length > 0 and
+      (libvirt_libvirtd.audit_level | int >= 0 or
+      libvirt_libvirtd.audit_level | int <= 2) %}
+audit_level               = {{ libvirt_libvirtd.audit_level }}
+{% endif %}
+{% if libvirt_libvirtd.audit_level is defined %}
+audit_logging             = {{ libvirt_libvirtd.audit_logging | bool | ternary('1', '0') }}
+{% endif %}

@@ -372,7 +372,7 @@ libvirt_defaults_vbox:
   log_outputs:
     - 3:syslog:virtvboxd
 
-libvirt_defaults_libvirtd:
+libvirt_defaults_monolithic_libvirtd:
   # - network
   enable_tls: false
   enable_tcp: false
@@ -481,183 +481,184 @@ libvirt_defaults_libvirtd:
   # - Open vSwitch
   ovs_timeout: ""                 # 5
 
-# libvirt_defaults_qemu:
-#   default:
-#     tls_x509_cert_dir: ""       # "/etc/pki/qemu"
-#     tls_x509_verify: ""         #  1
-#     tls_x509_secret_uuid: ""    # "00000000-0000-0000-0000-000000000000"
-#
-#   auto:
-#     dump_path: "/var/lib/libvirt/qemu/dump"
-#     dump_bypass_cache: false
-#     start_bypass_cache: false
-#
-#   backup:
-#     tls_x509_cert_dir: ""       # "/etc/pki/libvirt-backup"
-#     tls_x509_verify: ""         # 1
-#     tls_x509_secret_uuid: ""    # "00000000-0000-0000-0000-000000000000"
-#
-#   cgroup:
-#     controllers: []
-#       # - cpu
-#       # - devices
-#       # - memory
-#       # - blkio
-#       # - cpuset
-#       # - cpuacct
-#     device_acl: []
-#       # - "/dev/null"
-#       # - "/dev/full"
-#       # - "/dev/zero"
-#       # - "/dev/random"
-#       # - "/dev/urandom"
-#       # - "/dev/ptmx"
-#       # - "/dev/kvm"
-#
-#   chardev:
-#     tls: ""                   # 1
-#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-chardev"
-#     tls_x509_verify: ""       # 1
-#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
-#
-#   migrate:
-#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-migrate"
-#     tls_x509_verify: ""       # 1
-#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
-#     tls_force: ""             # 0
-#
-#   migration:
-#     address: "0.0.0.0"
-#     host: ""                  # "host.example.com"
-#     port_min: ""              # 49152
-#     port_max: ""              # 49215
-#
-#   nbd:
-#     tls: ""                   # 1
-#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-nbd"
-#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
-#
-#   nographics:
-#     allow_host_audio: true
-#
-#   remote:
-#     display_port_min: 5900
-#     display_port_max: 65535
-#     websocket_port_min: 5700
-#     websocket_port_max: 65535
-#
-#   security:
-#     drivers: []
-#     #  - selinux
-#     #  - apparmor
-#     default_confined: false
-#     require_confined: false
-#
-#   spice:
-#     listen: "0.0.0.0"
-#     tls: false
-#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-spice"
-#     auto_unix_socket: ""      # 1
-#     password: ""              # "XYZ12345"
-#     sasl: ""                  # 1
-#     sasl_dir: ""              # "/some/directory/sasl2"
-#
-#   vnc:
-#     listen: "127.0.0.1"
-#     auto_unix_socket: true
-#     tls: false
-#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-vnc"
-#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
-#     tls_x509_verify: ""       # true
-#     password: ""              # "XYZ12345"
-#     sasl: ""                  # true
-#     sasl_dir: ""              # "/some/directory/sasl2"
-#     allow_host_audio: ""      # false
-#
-#   vxhs:
-#     tls: ""                   # 1
-#     tls_x509_cert_dir: ""     # "/etc/pki/libvirt-vxhs"
-#     tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
-#
-#   system:
-#     user: "root"
-#     group: "root"
-#     dynamic_ownership: true
-#     remember_owner: true
-#
-#   image_format:
-#     save_image_format: ""     # "raw"
-#     dump_image_format: ""     # "raw"
-#     snapshot_image_format: "" # "raw"
-#
-#   misc:
-#     # If provided by the host and a hugetlbfs mount point is configured,
-#     # a guest may request huge page backing.  When this mount point is
-#     # unspecified here, determination of a host mount point in /proc/mounts
-#     # will be attempted.  Specifying an explicit mount overrides detection
-#     # of the same in /proc/mounts.  Setting the mount point to "" will
-#     # disable guest hugepage backing. If desired, multiple mount points can
-#     # be specified at once, separated by comma and enclosed in square
-#     # brackets, for example:
-#     #
-#     #     hugetlbfs_mount = ["/dev/hugepages2M", "/dev/hugepages1G"]
-#     #
-#     # The size of huge page served by specific mount point is determined by
-#     # libvirt at the daemon startup.
-#     #
-#     # NB, within these mount points, guests will create memory backing
-#     # files in a location of $MOUNTPOINT/libvirt/qemu
-#     #
-#     hugetlbfs_mounts: []
-#       # - "/dev/hugepages"
-#
-#     # Path to the setuid helper for creating tap devices.  This executable
-#     # is used to create <source type='bridge'> interfaces when libvirtd is
-#     # running unprivileged.  libvirt invokes the helper directly, instead
-#     # of using "-netdev bridge", for security reasons.
-#     bridge_helper: "/usr/lib/qemu/qemu-bridge-helper"
-#
-#
-#     # If enabled, libvirt will have QEMU set its process name to
-#     # "qemu:VM_NAME", where VM_NAME is the name of the VM. The QEMU
-#     # process will appear as "qemu:VM_NAME" in process listings and
-#     # other system monitoring tools. By default, QEMU does not set
-#     # its process title, so the complete QEMU command (emulator and
-#     # its arguments) appear in process listings.
-#     #
-#     set_process_name: true
-#
-#     # Determine if guest RAM is included in QEMU core dumps. By
-#     # default guest RAM will be excluded if a new enough QEMU is
-#     # present. Setting this to '1' will force guest RAM to always
-#     # be included in QEMU core dumps.
-#     #
-#     # This setting will be ignored if the guest XML has set the
-#     # dumpcore attribute on the <memory> element.
-#     #
-#     dump_guest_core: ""
-#
-#     # mac_filter enables MAC addressed based filtering on bridge ports.
-#     # This currently requires ebtables to be installed.
-#     #
-#     mac_filter: ""
-#
-#
-#     # By default, PCI devices below non-ACS switch are not allowed to be assigned
-#     # to guests. By setting relaxed_acs_check to 1 such devices will be allowed to
-#     # be assigned to guests.
-#     #
-#     relaxed_acs_check: ""
-#
-#
-#     # In order to prevent accidentally starting two domains that
-#     # share one writable disk, libvirt offers two approaches for
-#     # locking files. The first one is sanlock, the other one,
-#     # virtlockd, is then our own implementation. Accepted values
-#     # are "sanlock" and "lockd".
-#     #
-#     lock_manager: ""
+libvirt_defaults_monolithic_qemu:
+  default:
+    tls_x509_cert_dir: ""       # "/etc/pki/qemu"
+    tls_x509_verify: ""         #  1
+    tls_x509_secret_uuid: ""    # "00000000-0000-0000-0000-000000000000"
 
-# libvirt_defaults_network:
-#   firewall_backend: "iptables"                    # nftables, iptables
+  auto:
+    dump_path: "/var/lib/libvirt/qemu/dump"
+    dump_bypass_cache: false
+    start_bypass_cache: false
+
+  backup:
+    tls_x509_cert_dir: ""       # "/etc/pki/libvirt-backup"
+    tls_x509_verify: ""         # 1
+    tls_x509_secret_uuid: ""    # "00000000-0000-0000-0000-000000000000"
+
+  cgroup:
+    controllers: []
+      # - cpu
+      # - devices
+      # - memory
+      # - blkio
+      # - cpuset
+      # - cpuacct
+    device_acl: []
+      # - "/dev/null"
+      # - "/dev/full"
+      # - "/dev/zero"
+      # - "/dev/random"
+      # - "/dev/urandom"
+      # - "/dev/ptmx"
+      # - "/dev/kvm"
+
+  chardev:
+    tls: ""                   # 1
+    tls_x509_cert_dir: ""     # "/etc/pki/libvirt-chardev"
+    tls_x509_verify: ""       # 1
+    tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+
+  migrate:
+    tls_x509_cert_dir: ""     # "/etc/pki/libvirt-migrate"
+    tls_x509_verify: ""       # 1
+    tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+    tls_force: ""             # 0
+
+  migration:
+    address: "0.0.0.0"
+    host: ""                  # "host.example.com"
+    port_min: ""              # 49152
+    port_max: ""              # 49215
+
+  nbd:
+    tls: ""                   # 1
+    tls_x509_cert_dir: ""     # "/etc/pki/libvirt-nbd"
+    tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+
+  nographics:
+    allow_host_audio: true
+
+  remote:
+    display_port_min: 5900
+    display_port_max: 65535
+    websocket_port_min: 5700
+    websocket_port_max: 65535
+
+  security:
+    drivers: []
+    #  - selinux
+    #  - apparmor
+    default_confined: false
+    require_confined: false
+
+  spice:
+    listen: "0.0.0.0"
+    tls: false
+    tls_x509_cert_dir: ""     # "/etc/pki/libvirt-spice"
+    auto_unix_socket: ""      # 1
+    password: ""              # "XYZ12345"
+    sasl: ""                  # 1
+    sasl_dir: ""              # "/some/directory/sasl2"
+
+  vnc:
+    listen: "127.0.0.1"
+    auto_unix_socket: true
+    tls: false
+    tls_x509_cert_dir: ""     # "/etc/pki/libvirt-vnc"
+    tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+    tls_x509_verify: ""       # true
+    password: ""              # "XYZ12345"
+    sasl: ""                  # true
+    sasl_dir: ""              # "/some/directory/sasl2"
+    allow_host_audio: ""      # false
+
+  vxhs:
+    tls: ""                   # 1
+    tls_x509_cert_dir: ""     # "/etc/pki/libvirt-vxhs"
+    tls_x509_secret_uuid: ""  # "00000000-0000-0000-0000-000000000000"
+
+  system:
+    user: "root"
+    group: "root"
+    dynamic_ownership: true
+    remember_owner: true
+
+  image_format:
+    save_image_format: ""     # "raw"
+    dump_image_format: ""     # "raw"
+    snapshot_image_format: "" # "raw"
+
+  misc:
+    # If provided by the host and a hugetlbfs mount point is configured,
+    # a guest may request huge page backing.  When this mount point is
+    # unspecified here, determination of a host mount point in /proc/mounts
+    # will be attempted.  Specifying an explicit mount overrides detection
+    # of the same in /proc/mounts.  Setting the mount point to "" will
+    # disable guest hugepage backing. If desired, multiple mount points can
+    # be specified at once, separated by comma and enclosed in square
+    # brackets, for example:
+    #
+    #     hugetlbfs_mount = ["/dev/hugepages2M", "/dev/hugepages1G"]
+    #
+    # The size of huge page served by specific mount point is determined by
+    # libvirt at the daemon startup.
+    #
+    # NB, within these mount points, guests will create memory backing
+    # files in a location of $MOUNTPOINT/libvirt/qemu
+    #
+    hugetlbfs_mounts: []
+      # - "/dev/hugepages"
+
+    # Path to the setuid helper for creating tap devices.  This executable
+    # is used to create <source type='bridge'> interfaces when libvirtd is
+    # running unprivileged.  libvirt invokes the helper directly, instead
+    # of using "-netdev bridge", for security reasons.
+    bridge_helper: "/usr/lib/qemu/qemu-bridge-helper"
+
+
+    # If enabled, libvirt will have QEMU set its process name to
+    # "qemu:VM_NAME", where VM_NAME is the name of the VM. The QEMU
+    # process will appear as "qemu:VM_NAME" in process listings and
+    # other system monitoring tools. By default, QEMU does not set
+    # its process title, so the complete QEMU command (emulator and
+    # its arguments) appear in process listings.
+    #
+    set_process_name: true
+
+    # Determine if guest RAM is included in QEMU core dumps. By
+    # default guest RAM will be excluded if a new enough QEMU is
+    # present. Setting this to '1' will force guest RAM to always
+    # be included in QEMU core dumps.
+    #
+    # This setting will be ignored if the guest XML has set the
+    # dumpcore attribute on the <memory> element.
+    #
+    dump_guest_core: ""
+
+    # mac_filter enables MAC addressed based filtering on bridge ports.
+    # This currently requires ebtables to be installed.
+    #
+    mac_filter: ""
+
+
+    # By default, PCI devices below non-ACS switch are not allowed to be assigned
+    # to guests. By setting relaxed_acs_check to 1 such devices will be allowed to
+    # be assigned to guests.
+    #
+    relaxed_acs_check: ""
+
+
+    # In order to prevent accidentally starting two domains that
+    # share one writable disk, libvirt offers two approaches for
+    # locking files. The first one is sanlock, the other one,
+    # virtlockd, is then our own implementation. Accepted values
+    # are "sanlock" and "lockd".
+    #
+    lock_manager: ""
+
+libvirt_defaults_monolithic_network:
+  firewall_backend: "iptables"                    # nftables, iptables
+
 ...

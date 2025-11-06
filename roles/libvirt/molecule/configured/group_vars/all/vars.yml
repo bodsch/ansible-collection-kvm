@@ -9,7 +9,6 @@ libvirt_daemons:
       state: started
       enabled: true
 
-
 libvirt_libvirtd:
   enable_tcp: true
   tcp_port: 16509

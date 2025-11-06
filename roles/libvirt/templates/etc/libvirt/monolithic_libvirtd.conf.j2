@@ -1,0 +1,16 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+# monolithic config
+
+{% include('libvirtd.d/monolithic/network.j2') %}
+{% include('libvirtd.d/monolithic/sockets.j2') %}
+{% include('libvirtd.d/monolithic/authentication.j2') %}
+{% include('libvirtd.d/monolithic/x509-certificate.j2') %}
+{% include('libvirtd.d/monolithic/authorization.j2') %}
+{% include('libvirtd.d/monolithic/processing.j2') %}
+{% include('libvirtd.d/monolithic/logging.j2') %}
+{% include('libvirtd.d/monolithic/auditing.j2') %}
+{% include('libvirtd.d/monolithic/uuid.j2') %}
+{% include('libvirtd.d/monolithic/keepalive.j2') %}
+{% include('libvirtd.d/monolithic/open-vswitch.j2') %}

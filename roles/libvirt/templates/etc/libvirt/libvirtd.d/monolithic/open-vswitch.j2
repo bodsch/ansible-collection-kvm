@@ -1,0 +1,8 @@
+
+###################################################################
+# Open vSwitch:
+#
+{% if libvirt_libvirtd.ovs_timeout is defined and
+      libvirt_libvirtd.ovs_timeout | string | length > 0 %}
+ovs_timeout               = {{ libvirt_libvirtd.ovs_timeout | int }}
+{% endif %}

@@ -1,0 +1,71 @@
+
+#################################################################
+#
+# Authorization controls
+#
+
+
+# Flag to disable verification of our own server certificates
+#
+# When libvirtd starts it performs some sanity checks against
+# its own certificates.
+#
+# Default is to always run sanity checks. Uncommenting this
+# will disable sanity checks which is not a good idea
+#tls_no_sanity_certificate = 1
+
+# Flag to disable verification of client certificates
+#
+# Client certificate verification is the primary authentication mechanism.
+# Any client which does not present a certificate signed by the CA
+# will be rejected.
+#
+# Default is to always verify. Uncommenting this will disable
+# verification.
+#tls_no_verify_certificate = 1
+
+
+# An access control list of allowed x509 Distinguished Names
+# This list may contain wildcards such as
+#
+#    "C=GB,ST=London,L=London,O=Red Hat,CN=*"
+#
+# Any * matches any number of consecutive spaces, like a simplified glob(7).
+#
+# The format of the DN for a particular certificate can be queried
+# using:
+#
+#    virt-pki-query-dn clientcert.pem
+#
+# NB If this is an empty list, no client can connect, so comment out
+# entirely rather than using empty list to disable these checks
+#
+# By default, no DN's are checked
+#tls_allowed_dn_list = ["DN1", "DN2"]
+
+
+# Override the compile time default TLS priority string. The
+# default is usually "NORMAL" unless overridden at build time.
+# Only set this is it is desired for libvirt to deviate from
+# the global default settings.
+#
+#tls_priority="NORMAL"
+
+
+# An access control list of allowed SASL usernames. The format for username
+# depends on the SASL authentication mechanism. Kerberos usernames
+# look like username@REALM
+#
+# This list may contain wildcards such as
+#
+#    "*@EXAMPLE.COM"
+#
+# See the g_pattern_match function for the format of the wildcards.
+#
+# https://developer.gnome.org/glib/stable/glib-Glob-style-pattern-matching.html
+#
+# NB If this is an empty list, no client can connect, so comment out
+# entirely rather than using empty list to disable these checks
+#
+# By default, no Username's are checked
+#sasl_allowed_username_list = ["joe@EXAMPLE.COM", "fred@EXAMPLE.COM" ]

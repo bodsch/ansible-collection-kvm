@@ -1,0 +1,21 @@
+
+###################################################################
+# UUID of the host:
+# Host UUID is read from one of the sources specified in host_uuid_source.
+#
+# - 'smbios': fetch the UUID from 'dmidecode -s system-uuid'
+# - 'machine-id': fetch the UUID from /etc/machine-id
+#
+# The host_uuid_source default is 'smbios'. If 'dmidecode' does not provide
+# a valid UUID a temporary UUID will be generated.
+#
+# Another option is to specify host UUID in host_uuid.
+#
+# Keep the format of the example UUID below. UUID must not have all digits
+# be the same.
+
+# NB This default all-zeros UUID will not work. Replace
+# it with the output of the 'uuidgen' command and then
+# uncomment this entry
+#host_uuid = "00000000-0000-0000-0000-000000000000"
+#host_uuid_source = "smbios"

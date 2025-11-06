@@ -128,7 +128,7 @@ def test_directories(host, dirs):
     assert d.is_directory
 
 
-def test_modular_files(host):
+def test_files(host):
 
     _version = version(host)
 
@@ -176,6 +176,116 @@ def test_modular_files(host):
         f = host.file(x)
         assert f.exists
 
+def test_sockets(host):
+    """
+        # tree  /run/libvirt/
+        /run/libvirt/
+        |-- common
+        |   `-- system.token
+        |-- hostdevmgr
+        |-- interface
+        |-- libvirt-admin-sock
+        |-- libvirt-sock
+        |-- libvirt-sock-ro
+        |-- lxc
+        |   `-- autostarted
+        |-- network
+        |   |-- autostarted
+        |   `-- nwfilter.leases
+        |-- nodedev
+        |-- nwfilter
+        |-- nwfilter-binding
+        |-- qemu
+        |   |-- autostarted
+        |   |-- dbus
+        |   |-- passt
+        |   `-- slirp
+        |-- secrets
+        |-- storage
+        |   |-- autostarted
+        |   `-- pool.xml
+        |-- virtlockd-sock
+        `-- virtlogd-sock
+
+    """
+    _version = version(host)
+
+    print(f"installed version: {_version}")
+
+    _sockets = []
+
+    # modular > version 10.
+    if Version(_version) <= Version("9.0"):
+        _sockets = [
+            "/run/libvirt/libvirt-admin-sock",
+            "/run/libvirt/libvirt-sock",
+            "/run/libvirt/libvirt-sock-ro",
+            "/run/libvirt/virtlockd-sock",
+            "/run/libvirt/virtlogd-sock",
+            #"/run/libvirt/",
+            #"/run/libvirt/",
+            #"/run/libvirt/",
+        ]
+
+
+    for x in _sockets:
+        print(f" - {x}")
+        f = host.file(x)
+        assert f.exists
+
+def test_systemd(host):
+    """
+        # tree /etc/systemd/system/
+        /etc/systemd/system/
+        |-- default.target -> /lib/systemd/system/multi-user.target
+        |-- multi-user.target.wants
+        |   |-- libvirt-guests.service -> /lib/systemd/system/libvirt-guests.service
+        |   |-- libvirtd.service -> /lib/systemd/system/libvirtd.service
+        |-- sockets.target.wants
+        |   |-- libvirtd-admin.socket -> /lib/systemd/system/libvirtd-admin.socket
+        |   |-- libvirtd-ro.socket -> /lib/systemd/system/libvirtd-ro.socket
+        |   |-- libvirtd-tcp.socket -> /lib/systemd/system/libvirtd-tcp.socket
+        |   |-- libvirtd.socket -> /lib/systemd/system/libvirtd.socket
+        |   |-- virtlockd-admin.socket -> /lib/systemd/system/virtlockd-admin.socket
+        |   |-- virtlockd.socket -> /lib/systemd/system/virtlockd.socket
+        |   |-- virtlogd-admin.socket -> /lib/systemd/system/virtlogd-admin.socket
+        |   `-- virtlogd.socket -> /lib/systemd/system/virtlogd.socket
+        |-- sshd.service -> /lib/systemd/system/ssh.service
+        |-- sysinit.target.wants
+        `-- timers.target.wants
+
+    """
+    _version = version(host)
+
+    print(f"installed version: {_version}")
+
+    systemd = []
+
+    # modular > version 10.
+    if Version(_version) < Version("9.0"):
+
+        systemd = [
+            "/etc/systemd/system/multi-user.target.wants/libvirtd.service",
+            "/etc/systemd/system/sockets.target.wants/libvirtd-admin.socket",
+            "/etc/systemd/system/sockets.target.wants/libvirtd-ro.socket",
+            "/etc/systemd/system/sockets.target.wants/libvirtd-tcp.socket",
+            "/etc/systemd/system/sockets.target.wants/libvirtd.socket",
+            "/etc/systemd/system/sockets.target.wants/virtlockd-admin.socket",
+            "/etc/systemd/system/sockets.target.wants/virtlockd.socket",
+            "/etc/systemd/system/sockets.target.wants/virtlogd-admin.socket",
+            "/etc/systemd/system/sockets.target.wants/virtlogd.socket",
+            # "/etc/systemd/system/sockets.target.wants/",
+            # "/etc/systemd/system/sockets.target.wants/",
+            # "/etc/systemd/system/sockets.target.wants/",
+        ]
+
+
+
+    for x in systemd:
+        print(f" - {x}")
+        f = host.file(x)
+        assert f.exists
+
 
 # @pytest.mark.parametrize("files", [
 #     "/etc/systemd/system/sockets.target.wants/virtlockd-admin.socket",
@@ -197,100 +307,84 @@ def test_modular_files(host):
 # def test_removed_sockets(host, files):
 #     f = host.file(files)
 #     assert not f.exists
-#
-#
-# @pytest.mark.parametrize("dirs", [
-#     "/etc/libvirt",
-#     "/etc/libvirt/qemu",
-#     "/etc/libvirt/storage"
-# ])
-# def test_directories(host, dirs):
-#     d = host.file(dirs)
-#     assert d.is_directory
-#
-#
-# @pytest.mark.parametrize("files", [
-#     "/etc/libvirt/libvirtd.conf",
-#     "/etc/libvirt/qemu.conf",
-#     "/etc/libvirt/qemu/networks/default.xml",
-#     "/etc/libvirt/storage/pool.xml",
-# ])
-# def test_files(host, files):
-#     f = host.file(files)
-#     assert f.exists
-#
-#
-# def test_qemu_conf(host, get_vars):
-#     """
-#     """
-#     import re
-#     security_driver = "security_driver.* = \"none\""
-#     vnc_listen      = "vnc_listen .* = \"127.0.0.1\""
-#     config_file = host.file("/etc/libvirt/qemu.conf")
-#
-#     assert config_file.is_file
-#
-#     content = config_file.content_string.split("\n")
-#     reg_security_driver = re.compile(security_driver)
-#     reg_vnc_listen = re.compile(vnc_listen)
-#
-#     assert (len(list(filter(reg_security_driver.match, content))) > 0)
-#     assert (len(list(filter(reg_vnc_listen.match, content))) > 0)
-#
-#
-# def test_libvirt_conf(host, get_vars):
-#     """
-#     """
-#     _conf_libvirtd = get_vars.get("libvirt_libvirtd", {})
-#     _conf_libvirtd_tcp_port = _conf_libvirtd.get("tcp_port", None)
-#
-#     if not _conf_libvirtd_tcp_port:
-#         assert False, "TCP is enabled, but no port ist configured"
-#
-#     log_outputs = 'log_outputs               = "2:file:/var/log/libvirt/libvirtd.log 3:journald"'
-#     listen_tcp = 'listen_tcp                = 1'
-#     listen_tcp_port = f'tcp_port                  = "{_conf_libvirtd_tcp_port}"'
-#
-#     config_file = host.file("/etc/libvirt/libvirtd.conf")
-#
-#     assert config_file.is_file
-#
-#     assert log_outputs in config_file.content_string
-#     assert listen_tcp in config_file.content_string
-#     assert listen_tcp_port in config_file.content_string
-#
-#
-# def test_service_running_and_enabled(host, get_vars):
-#     """
-#       running service
-#     """
-#     service = host.service("libvirtd")
-#     assert service.is_running
-#     assert service.is_enabled
-#
-#
-# def test_listening_socket(host, get_vars):
-#     """
-#     """
-#     listening = host.socket.get_listening_sockets()
-#
-#     for i in listening:
-#         print(i)
-#
-#     _conf_libvirtd = get_vars.get("libvirt_libvirtd", {})
-#     _conf_libvirtd_tcp = _conf_libvirtd.get("enable_tcp", True)
-#
-#     listen = []
-#
-#     if _conf_libvirtd_tcp:
-#         _conf_libvirtd_tcp_port = _conf_libvirtd.get("tcp_port", None)
-#
-#         if not _conf_libvirtd_tcp_port:
-#             assert False, "TCP is enabled, but no port ist configured"
-#
-#         listen.append(f"tcp://0.0.0.0:{_conf_libvirtd_tcp_port}")
-#
-#     for spec in listen:
-#         socket = host.socket(spec)
-#         assert socket.is_listening
-#
+
+
+def test_qemu_conf(host, get_vars):
+    """
+    """
+    import re
+    security_driver = "security_driver.* = \"none\""
+    vnc_listen      = "vnc_listen .* = \"127.0.0.1\""
+    config_file = host.file("/etc/libvirt/qemu.conf")
+
+    assert config_file.is_file
+
+    content = config_file.content_string.split("\n")
+    reg_security_driver = re.compile(security_driver)
+    reg_vnc_listen = re.compile(vnc_listen)
+
+    assert (len(list(filter(reg_security_driver.match, content))) > 0)
+    assert (len(list(filter(reg_vnc_listen.match, content))) > 0)
+
+
+def test_libvirt_conf(host, get_vars):
+    """
+    """
+    _conf_libvirtd = get_vars.get("libvirt_libvirtd", {})
+    _conf_libvirtd_tcp_port = _conf_libvirtd.get("tcp_port", None)
+
+    if not _conf_libvirtd_tcp_port:
+        assert False, "TCP is enabled, but no port ist configured"
+
+    log_outputs = 'log_outputs               = "2:file:/var/log/libvirt/libvirtd.log 3:journald"'
+    listen_tcp = 'listen_tcp                = 1'
+    listen_tcp_port = f'tcp_port                  = "{_conf_libvirtd_tcp_port}"'
+
+    config_file = host.file("/etc/libvirt/libvirtd.conf")
+
+    assert config_file.is_file
+
+    assert log_outputs in config_file.content_string
+    assert listen_tcp in config_file.content_string
+    assert listen_tcp_port in config_file.content_string
+
+
+def test_service_running_and_enabled(host, get_vars):
+    """
+      running service
+    """
+    service = host.service("libvirtd")
+    assert service.is_running
+    assert service.is_enabled
+
+
+def test_listening_socket(host, get_vars):
+    """
+    """
+    _version = version(host)
+
+    print(f"installed version: {_version}")
+    listen = []
+
+    listening = host.socket.get_listening_sockets()
+
+    for i in listening:
+        print(i)
+
+    if Version(_version) > Version("10.0"):
+
+        _conf_libvirtd = get_vars.get("libvirt_libvirtd", {})
+        _conf_libvirtd_tcp = _conf_libvirtd.get("enable_tcp", True)
+
+        if _conf_libvirtd_tcp:
+            _conf_libvirtd_tcp_port = _conf_libvirtd.get("tcp_port", None)
+
+            if not _conf_libvirtd_tcp_port:
+                assert False, "TCP is enabled, but no port ist configured"
+
+            listen.append(f"tcp://0.0.0.0:{_conf_libvirtd_tcp_port}")
+
+    for spec in listen:
+        socket = host.socket(spec)
+        assert socket.is_listening
+

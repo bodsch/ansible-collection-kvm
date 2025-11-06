@@ -56,9 +56,6 @@
             - not ansible_check_mode
             - ansible_service_mgr | lower == "systemd"
 
-
-
-
     # wait for ...
     #  - /run/libvirt/virtnetworkd-sock
 

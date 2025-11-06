@@ -1,0 +1,19 @@
+
+#################################################################
+#
+# UNIX socket access controls
+#
+unix_sock_group           = "{{ libvirt_libvirtd.unix_sock_group }}"
+unix_sock_dir             = "{{ libvirt_libvirtd.unix_sock_dir }}"
+{% if libvirt_libvirtd.unix_sock_ro_perms is defined and
+      libvirt_libvirtd.unix_sock_ro_perms | string | length > 0 %}
+unix_sock_ro_perms        = "{{ libvirt_libvirtd.unix_sock_ro_perms }}"
+{% endif %}
+{% if libvirt_libvirtd.unix_sock_rw_perms is defined and
+      libvirt_libvirtd.unix_sock_rw_perms | string | length > 0 %}
+unix_sock_rw_perms        = "{{ libvirt_libvirtd.unix_sock_rw_perms }}"
+{% endif %}
+{% if libvirt_libvirtd.unix_sock_admin_perms is defined and
+      libvirt_libvirtd.unix_sock_admin_perms | string | length > 0 %}
+unix_sock_admin_perms     = "{{ libvirt_libvirtd.unix_sock_admin_perms }}"
+{% endif %}

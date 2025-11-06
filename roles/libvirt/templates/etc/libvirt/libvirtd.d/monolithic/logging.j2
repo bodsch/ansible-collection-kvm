@@ -1,0 +1,19 @@
+
+#################################################################
+#
+# Logging controls
+#
+{% if libvirt_libvirtd.log_level is defined and
+      libvirt_libvirtd.log_level | string | length > 0 and
+      (libvirt_libvirtd.log_level | int >= 1 or
+      libvirt_libvirtd.log_level | int <= 4) %}
+log_level                 = {{ libvirt_libvirtd.log_level }}
+{% endif %}
+{% if libvirt_libvirtd.log_filters is defined and
+      libvirt_libvirtd.log_filters | count > 0 %}
+log_filters               = "{{ libvirt_libvirtd.log_filters | join(' ') }}"
+{% endif %}
+{% if libvirt_libvirtd.log_outputs is defined and
+      libvirt_libvirtd.log_outputs %}
+log_outputs               = "{{ libvirt_libvirtd.log_outputs | join(' ') }}"
+{% endif %}

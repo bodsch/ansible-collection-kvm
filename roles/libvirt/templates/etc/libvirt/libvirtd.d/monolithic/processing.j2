@@ -1,0 +1,17 @@
+
+#################################################################
+#
+# Processing controls
+#
+max_clients               = {{ libvirt_libvirtd.max_clients }}
+max_queued_clients        = {{ libvirt_libvirtd.max_queued_clients }}
+max_anonymous_clients     = {{ libvirt_libvirtd.max_anonymous_clients }}
+min_workers               = {{ libvirt_libvirtd.min_workers }}
+max_workers               = {{ libvirt_libvirtd.max_workers }}
+prio_workers              = {{ libvirt_libvirtd.prio_workers }}
+max_client_requests       = {{ libvirt_libvirtd.max_client_requests }}
+admin_min_workers         = {{ libvirt_libvirtd.admin_min_workers }}
+admin_max_workers         = {{ libvirt_libvirtd.admin_max_workers }}
+admin_max_clients         = {{ libvirt_libvirtd.admin_max_clients }}
+admin_max_queued_clients  = {{ libvirt_libvirtd.admin_max_queued_clients }}
+admin_max_client_requests = {{ libvirt_libvirtd.admin_max_client_requests }}

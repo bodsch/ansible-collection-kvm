@@ -2,19 +2,10 @@
 
 - name: merge libvirt config configuration between defaults and custom
   ansible.builtin.set_fact:
-    libvirt_libvirtd: "{{ libvirt_defaults_libvirtd | combine(libvirt_libvirtd, recursive=True)}}"
-#       network=libvirt_network,
-#       sockets=libvirt_libvirtd,
-#       authentication=None,
-#       x509_certificate=None,
-#       authorization=None,
-#       processing=None,
-#       logging=None,
-#       auditing=None,
-#       uuid=None,
-#       keepalive=None,
-#       open_vswitch=None) }}"
     libvirt_service: "{{ _monolitic_service | default({}) | combine( { 'name': 'libvirtd' } ) }}"
+    libvirt_libvirtd: "{{ libvirt_defaults_monolithic_libvirtd | combine(libvirt_libvirtd, recursive=True) }}"
+    libvirt_qemu: "{{ libvirt_defaults_monolithic_qemu | combine(libvirt_qemu, recursive=True) }}"
+    libvirt_network: "{{ libvirt_defaults_monolithic_network | combine(libvirt_network, recursive=True) }}"
 
 - name: d
   debug:
@@ -23,7 +14,7 @@
 - name: create libvirtd.conf
   become: true
   ansible.builtin.template:
-    src: etc/libvirt/libvirtd.conf.j2
+    src: etc/libvirt/monolithic_libvirtd.conf.j2
     dest: /etc/libvirt/libvirtd.conf
     owner: root
     group: root
@@ -35,8 +26,20 @@
 - name: create network.conf
   become: true
   ansible.builtin.template:
-    src: etc/libvirt/network.conf.j2
+    src: etc/libvirt/monolithic_network.conf.j2
     dest: /etc/libvirt/network.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+    backup: true
+  notify:
+    - restart {{ libvirt_service.name }}
+
+- name: create qemu.conf
+  become: true
+  ansible.builtin.template:
+    src: etc/libvirt/monolithic_qemu.conf.j2
+    dest: /etc/libvirt/qemu.conf
     owner: root
     group: root
     mode: u=rw,g=r,o=r

@@ -1,25 +1,29 @@
 ---
-- name: Ensure storage pool active
+
+# The pool itself is created by bodsch.kvm.storage_pool. Here we only make sure
+# it is active (needed to create volumes) and read its target path for the VM XML.
+- name: ensure storage pool is active
   community.libvirt.virt_pool:
-    name: "{{ libvirt_pool }}"
+    name: "{{ instances_libvirt.pool }}"
     state: active
-    autostart: true
-    uri: "{{ libvirt_uri }}"
+    uri: "{{ instances_libvirt.uri }}"
 
-- name: Get pool XML
+- name: get storage pool xml
   community.libvirt.virt_pool:
-    name: "{{ libvirt_pool }}"
+    name: "{{ instances_libvirt.pool }}"
     command: get_xml
-    uri: "{{ libvirt_uri }}"
-  register: pool_xml
+    uri: "{{ instances_libvirt.uri }}"
+  register: instances_pool_xml
 
-- name: Extract pool path
+- name: extract storage pool path
   ansible.builtin.xml:
-    xmlstring: "{{ pool_xml.msg }}"
+    xmlstring: "{{ instances_pool_xml.msg }}"
     content: text
     xpath: /pool/target/path
-  register: pool_path_xml
+  register: instances_pool_path_xml
 
-- name: Set pool path fact
+- name: set storage pool path fact
   ansible.builtin.set_fact:
-    libvirt_pool_path: "{{ pool_path_xml.matches[0].pool.target.path }}"
+    instances_pool_path: "{{ instances_pool_path_xml.matches[0].pool.target.path }}"
+
+...

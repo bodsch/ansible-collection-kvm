@@ -2,34 +2,33 @@
 
 instances_libvirt:
   uri: "qemu:///system"
-  pool: "default"
+  pool: "pool"                # provided by the storage_pool role (see libvirt.yml)
+  network: "vm-network"       # provided by the network role (see libvirt.yml)
 
-ssh_public_key: "ssh-ed25519 AAAA...meinkey"
+instances_ssh_public_key: "ssh-ed25519 AAAA...meinkey"
 
-# Basis-Images MÜSSEN als Volumes im Pool existieren (Name in libvirt!)
-# z.B. via `virt-manager` oder separatem Playbook anlegen.
-os_base_volumes:
-  - name: debian-12
-    source: "http://..."
-    destination: "debian-12-base.qcow2"
-  - name: arch
-    source: "http://..."
-    destination: "archlinux-base.qcow2"
+# Base image volume per `os`. These volumes MUST already exist in the pool
+# (created out of band, e.g. via virt-manager or a separate playbook); molecule
+# does not download them.
+instances_os_base_volumes:
+  debian: "debian-12-base.qcow2"
+  arch: "archlinux-base.qcow2"
 
-# VMs (Schlüssel = interner Bezeichner)
+# VMs (key = internal identifier). `os` selects cloud_init_<os>.yaml.j2 and the
+# instances_os_base_volumes entry.
 instances:
   dns:
     hostname: "dns"
     vcpus: 1
     memory_mb: 1024
-    os: "debian12"          # "debian12" | "arch"
+    os: "debian"
     ip:
       prefix: "192.168.0"
       octet: 11
     os_disk_gb: 10
     data_disks:
       - { name: "data0", size_gb: 20 }
-      - { name: "logs",  size_gb: 10 }
+      - { name: "logs", size_gb: 10 }
 
   arch-ci:
     hostname: "arch-ci"

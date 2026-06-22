@@ -32,10 +32,19 @@ storage_pools:
     state: active
 
 virtual_networks:
-  - name: NATting
-    mode: bridge
-    bridge_name: br0
+  - name: vm-network
+    mode: nat
+    bridge_name: virbr-vm
     autostart: true
-    state: absent
+    state: active
+    enable_dhcp: true
+    dhcp_gateway: "192.168.0.1"
+    dhcp_netmask: "255.255.255.0"
+    dhcp_scope_start: "192.168.0.2"
+    dhcp_scope_end: "192.168.0.254"
+
+network_domain_name: "matrix.lan"
+network_dns_primary: "192.168.0.1"
+network_dns_secondary: "1.1.1.1"
 
 ...

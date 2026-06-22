@@ -3,15 +3,15 @@
 - name: prepare
   ansible.builtin.include_tasks: prepare.yml
 
-- name: create pools
+# Storage pools and virtual networks are provisioned by the dedicated
+# bodsch.kvm.storage_pool / bodsch.kvm.network roles (run earlier in the play).
+# Here we only ensure the target pool is usable and read its path.
+- name: ensure storage pool
   ansible.builtin.import_tasks: pool.yml
 
-- name: create networks
-  ansible.builtin.import_tasks: network.yml
-
 - name: create instances
-  ansible.builtin.include_tasks: instances.yml
-  loop: "{{ servers | dict2items }}"
+  ansible.builtin.include_tasks: instance.yml
+  loop: "{{ instances | dict2items }}"
   loop_control:
     loop_var: vmitem
 

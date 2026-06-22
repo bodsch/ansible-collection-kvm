@@ -1,13 +1,34 @@
 ---
 
-vm_libvirt:
+instances_libvirt:
   uri: "qemu:///system"
-  pool: "default"
-  network: "vm-network"
+  pool: "default"             # storage pool (created by bodsch.kvm.storage_pool)
+  network: "vm-network"       # virtual network (created by bodsch.kvm.network)
 
-vm_autostart_vms: true
+instances_autostart: true
 
-vm_graphics:
+instances_graphics:
   type: "spice"
+
+instances_ssh_public_key: ""
+
+# Base image volume per instance `os` value. The referenced volumes must already
+# exist in instances_libvirt.pool (provisioned out of band).
+instances_os_base_volumes: {}
+#   debian: debian-12-base.qcow2
+#   arch: archlinux-base.qcow2
+
+# Instances to create, keyed by an internal identifier. The `os` value selects
+# both cloud_init_<os>.yaml.j2 and the instances_os_base_volumes entry.
+instances: {}
+#   dns:
+#     hostname: dns
+#     os: debian
+#     vcpus: 1
+#     memory_mb: 1024
+#     os_disk_gb: 10
+#     data_disks:
+#       - { name: data0, size_gb: 20 }
+#     ip: { prefix: "192.168.0", octet: 11 }
 
 ...

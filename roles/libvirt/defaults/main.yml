@@ -151,10 +151,6 @@ libvirt_storage: {}
 
 libvirt_vbox: {}
 
-libvirt_virtual_networks: []
-
-libvirt_storage_pools: []
-
 # monolithic
 libvirt_libvirtd: {}
 

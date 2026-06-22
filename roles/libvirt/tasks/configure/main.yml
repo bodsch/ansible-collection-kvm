@@ -43,15 +43,7 @@
     - ansible_facts.service_mgr | lower == "systemd"
     - libvirt_use_modular | bool
 
-# - name: configure storage pools
-#   ansible.builtin.include_tasks: configure/libvirt_storage_pools.yml
-#   when:
-#     - libvirt_storage_pools is defined
-#     - libvirt_storage_pools | default([]) | count > 0
-#
-# - name: configure networks
-#   ansible.builtin.include_tasks: configure/libvirt_networks.yml
-#   when:
-#     - libvirt_virtual_networks is defined
-#     - libvirt_virtual_networks | default([]) | count > 0
-#
+# Storage pools and virtual networks are handled by the dedicated
+# bodsch.kvm.storage_pool and bodsch.kvm.network roles.
+
+...

@@ -42,5 +42,7 @@
 
   roles:
     - role: bodsch.kvm.libvirt
+    - role: bodsch.kvm.storage_pool
+    - role: bodsch.kvm.network
 
 ...

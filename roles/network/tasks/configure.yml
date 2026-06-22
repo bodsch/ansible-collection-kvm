@@ -1,0 +1,52 @@
+---
+
+- name: ensure the libvirt network daemon is available
+  become: true
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ ['virtqemud.socket', 'virtnetworkd.socket'] if (network_use_modular | bool) else ['libvirtd.service'] }}"
+  loop_control:
+    label: "{{ item }}"
+  when:
+    - not ansible_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
+
+- name: define virtual networks
+  become: true
+  community.libvirt.virt_net:
+    command: define
+    name: "{{ item.name }}"
+    xml: "{{ lookup('template', 'network.xml.j2') }}"
+  loop: "{{ virtual_networks }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default("present") != "absent"
+
+- name: set virtual network state
+  become: true
+  community.libvirt.virt_net:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+  loop: "{{ virtual_networks }}"
+  loop_control:
+    label: "{{ item.name }} -> {{ item.state }}"
+  when:
+    - item.state is defined
+
+- name: set virtual network autostart
+  become: true
+  community.libvirt.virt_net:
+    name: "{{ item.name }}"
+    autostart: "{{ item.autostart | bool }}"
+  failed_when: false
+  loop: "{{ virtual_networks }}"
+  loop_control:
+    label: "{{ item.name }} -> autostart={{ item.autostart }}"
+  when:
+    - item.autostart is defined
+    - item.state | default("present") != "absent"
+
+...

@@ -1,0 +1,21 @@
+---
+
+# Defined (not started) so the test does not depend on the container's network
+# stack, while still exercising the full template (nat + bridge + dhcp + dns).
+virtual_networks:
+  - name: molecule-net
+    mode: nat
+    bridge_name: virbr-mol
+    state: present
+    autostart: false
+    enable_dhcp: true
+    dhcp_gateway: "192.168.123.1"
+    dhcp_netmask: "255.255.255.0"
+    dhcp_scope_start: "192.168.123.10"
+    dhcp_scope_end: "192.168.123.100"
+
+network_domain_name: "molecule.local"
+network_dns_primary: "1.1.1.1"
+network_dns_secondary: "8.8.8.8"
+
+...

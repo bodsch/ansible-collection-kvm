@@ -24,18 +24,4 @@ libvirt_libvirtd:
     - 2:file:/var/log/libvirt/libvirtd.log
     - 3:journald
 
-libvirt_storage_pools:
-  - name: pool
-    uuid: 4b39e9c3-b4b9-49b0-8ef9-9caa3d985410
-    path: /var/lib/libvirt/pool
-    autostart: true
-    state: active
-
-libvirt_virtual_networks:
-  - name: NATting
-    mode: bridge
-    bridge_name: br0
-    autostart: true
-    state: absent
-
 ...

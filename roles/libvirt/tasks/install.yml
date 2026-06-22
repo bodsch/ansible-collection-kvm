@@ -21,12 +21,6 @@
     - _libvirtd_version.version is defined
     - _libvirtd_version.version | string | length > 0
 
-- name: create custom fact file
-  bodsch.core.facts:
-    name: libvirtd
-    facts:
-      version: "{{ libvirtd_version }}"
-
 # Resolve the effective daemon model once, so configure and service phases agree.
 # 'auto' falls back to the version heuristic (modular from libvirt 10 onwards).
 - name: resolve libvirt daemon model
@@ -38,5 +32,15 @@
 - name: report effective daemon model
   ansible.builtin.debug:
     msg: "model={{ libvirt_daemon_model }} -> {{ 'modular' if (libvirt_use_modular | bool) else 'monolithic' }} (libvirtd {{ libvirtd_version }})"
+
+# Published for the storage_pool / network roles, which read this fact instead of
+# re-detecting the model (see those roles' prepare.yml).
+- name: create custom fact file
+  bodsch.core.facts:
+    name: libvirtd
+    facts:
+      version: "{{ libvirtd_version }}"
+      daemon_model: "{{ libvirt_daemon_model }}"
+      use_modular: "{{ libvirt_use_modular | bool }}"
 
 ...

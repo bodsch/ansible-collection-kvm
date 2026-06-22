@@ -6,7 +6,7 @@
   block:
     - name: modular services
       when:
-        - libvirtd_version is version_compare("10", operator='>=')
+        - libvirt_use_modular | bool
       block:
         - name: enable virtproxyd daemon
           bodsch.kvm.modular_services:
@@ -27,7 +27,7 @@
 
     - name: monolithic services
       when:
-        - libvirtd_version is version_compare("10", operator='<')
+        - not (libvirt_use_modular | bool)
       block:
 
         - name: enable / disable libvirtd-tcp.socket

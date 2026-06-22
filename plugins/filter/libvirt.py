@@ -19,6 +19,7 @@ class FilterModule(object):
             "security_drivers": self.security_drivers,
             "cgroup_controllers": self.cgroup_controllers,
             "modular_daemons": self.modular_daemons,
+            "modular_daemons_off": self.modular_daemons_off,
             "libvirt_proxy_daemons": self.libvirt_proxy_daemons,
         }
 
@@ -124,6 +125,33 @@ class FilterModule(object):
         if daemon not in no_ro_socket:
             units.append(f"virt{daemon}d-ro.socket")
         units.append(f"virt{daemon}d-admin.socket")
+
+        return units
+
+    def modular_daemons_off(self, data, keep=("libvirtd", "lock", "log")):
+        """
+        Service + socket units for every modular driver daemon present in
+        libvirt_services, *regardless* of its enabled flag.
+
+        Excludes the monolithic 'libvirtd' and the always-on virtlogd/virtlockd
+        (both are shared with the monolithic libvirtd and must keep running).
+        Used to disable the modular daemons when forcing the monolithic model.
+        """
+        display.v(f"modular_daemons_off({data}, keep: {keep})")
+
+        units = []
+
+        for daemon in data.keys():
+            if daemon in keep:
+                continue
+
+            units.append(f"virt{daemon}d.service")
+            units += self.modular_socket_units(daemon)
+
+            if daemon == "proxy":
+                units += ["virtproxyd-tcp.socket", "virtproxyd-tls.socket"]
+
+        display.v(f"= result: {units}")
 
         return units
 

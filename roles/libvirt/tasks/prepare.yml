@@ -1,5 +1,12 @@
 ---
 
+- name: validate libvirt_daemon_model
+  ansible.builtin.assert:
+    that:
+      - libvirt_daemon_model in ["auto", "monolithic", "modular"]
+    fail_msg: "libvirt_daemon_model must be one of 'auto', 'monolithic' or 'modular' (got '{{ libvirt_daemon_model }}')."
+    quiet: true
+
 - name: include OS specific configuration ({{ ansible_facts.distribution }} ({{ ansible_facts.os_family }}) {{ ansible_facts.distribution_major_version }})
   ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
   vars:

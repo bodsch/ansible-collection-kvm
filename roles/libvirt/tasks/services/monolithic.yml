@@ -1,5 +1,19 @@
 ---
 
+# When the monolithic model is in use (forced or below libvirt 10), make sure the
+# modular driver daemons are not competing for the same endpoints. virtlogd /
+# virtlockd are kept on purpose; libvirtd relies on them. Units that do not exist
+# (e.g. on a genuine pre-10 host) are simply skipped.
+- name: disable modular daemons
+  bodsch.kvm.modular_services:
+    state: disable
+    units: "{{ libvirt_services | bodsch.kvm.modular_daemons_off }}"
+  notify:
+    - daemon-reload
+  when:
+    - not ansible_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
+
 - name: enable / disable libvirtd-tcp.socket
   become: true
   ansible.builtin.service:

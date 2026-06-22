@@ -1,0 +1,13 @@
+---
+
+# Force the monolithic libvirtd even though the test image ships libvirt >= 10.
+# Exercises the libvirt_daemon_model override and the modular -> monolithic switch.
+libvirt_daemon_model: "monolithic"
+
+libvirt_libvirtd:
+  log_level: 3
+  log_outputs:
+    - 2:file:/var/log/libvirt/libvirtd.log
+    - 3:journald
+
+...

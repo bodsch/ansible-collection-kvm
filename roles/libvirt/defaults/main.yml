@@ -1,5 +1,11 @@
 ---
 
+# Which libvirt daemon model to use:
+#   auto       - monolithic 'libvirtd' below libvirt 10, modular 'virt*d' from 10 onwards
+#   monolithic - always use the monolithic libvirtd (also on libvirt >= 10)
+#   modular    - always use the modular virt*d daemons
+libvirt_daemon_model: "auto"
+
 libvirt_service: {}
 #   libvirtd_args: []                                   # '--timeout 120' | --listen | ...
 #   qemu_audio_drv: ""                                  # sdl

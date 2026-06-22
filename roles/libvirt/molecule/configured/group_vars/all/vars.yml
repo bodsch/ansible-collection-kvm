@@ -27,7 +27,7 @@ libvirt_libvirtd:
     - 3:node_device
     - 3:rpc
     - 3:access
-    - 1:*
+    - 1:*y
 
   log_outputs:
     - 2:file:/var/log/libvirt/libvirtd.log

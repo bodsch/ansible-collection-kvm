@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 # (c) 2020-2023, Bodo Schulz <bodo@boone-schulz.de>
@@ -9,31 +8,37 @@ from __future__ import absolute_import, division, print_function
 
 import os
 import shutil
+from typing import Any, List
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.bodsch.systemd.plugins.module_utils.systemd import SystemdClient, SystemdError, UnitNotFoundError, AccessDeniedError, DBusIOError
-
+from ansible_collections.bodsch.systemd.plugins.module_utils.systemd import (
+    AccessDeniedError,
+    DBusIOError,
+    SystemdClient,
+    SystemdError,
+    UnitNotFoundError,
+)
 
 
 class LibvirtService:
-    """
-    """
+    """ """
+
     def __init__(self, module):
-        """
-        """
+        """ """
         self.module = module
         self.module.log("LibvirtService::__init__()")
 
-
-    def verify(self,
-            user_manager: bool = False,
-            services: list = [],
-            service_types: list = ["service", "socket", "timer"],
-            include_inactive: bool = True
-        ):
-        """
-        """
-        self.module.log(f"LibvirtService::verify(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})")
+    def verify(
+        self,
+        user_manager: bool = False,
+        services: list = [],
+        service_types: list = ["service", "socket", "timer"],
+        include_inactive: bool = True,
+    ):
+        """ """
+        self.module.log(
+            f"LibvirtService::verify(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})"
+        )
 
         result_state = []
 
@@ -41,12 +46,14 @@ class LibvirtService:
             user_manager=user_manager,
             services=services,
             service_types=service_types,
-            include_inactive=include_inactive
+            include_inactive=include_inactive,
         )
 
         # self.module.log(f"name: {'Name':27} kind: {'Kind':7} state (active): {'state active':10} state (sub): {r.sub_state:8} masked: {r.is_masked} state: {(r.unit_file_state or '-'):10} {(r.load_state or '-'):10} {r.description}")
         for r in service_matches:
-            self.module.log(f"name: {r.name:27} kind: {r.kind:7} state (active / sub): {r.active_state:8} / {r.sub_state:8} masked: {r.is_masked:7} state: {(r.unit_file_state or '-'):10}") # {(r.load_state or '-'):10} {r.description}")
+            self.module.log(
+                f"name: {r.name:27} kind: {r.kind:7} state (active / sub): {r.active_state:8} / {r.sub_state:8} masked: {r.is_masked:7} state: {(r.unit_file_state or '-'):10}"
+            )  # {(r.load_state or '-'):10} {r.description}")
 
         return service_matches
 
@@ -76,26 +83,34 @@ class LibvirtService:
         #
         # return result_state
 
-    def enable(self,
-            user_manager: bool = False,
-            services: list = [],
-            service_types: list = ["service", "socket", "timer"],
-            include_inactive: bool = True
-        ):
-        """
-        """
-        self.module.log(f"LibvirtService::enable(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})")
+    def enable(
+        self,
+        user_manager: bool = False,
+        services: list = [],
+        service_types: list = ["service", "socket", "timer"],
+        include_inactive: bool = True,
+    ):
+        """ """
+        self.module.log(
+            f"LibvirtService::enable(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})"
+        )
 
         result_state = []
         service_matches = self.systemd_services(
             user_manager=user_manager,
             services=services,
             service_types=service_types,
-            include_inactive=include_inactive
+            include_inactive=include_inactive,
         )
 
         # {'libvirtd.service': {'enabled': 'enabled', 'active': 'inactive'}, 'libvirtd.socket': {'enabled': 'enabled', 'active': 'active'}}
-        _states  = {u.name: dict(masked=u.is_masked, enabled=u.unit_file_state, active=u.active_state) for u in service_matches if u.name in self.units}
+        _states = {
+            u.name: dict(
+                masked=u.is_masked, enabled=u.unit_file_state, active=u.active_state
+            )
+            for u in service_matches
+            if u.name in self.units
+        }
 
         # modular = self.any_effectively_enabled(_states)
 
@@ -112,8 +127,8 @@ class LibvirtService:
                 _changed = False
 
                 unit_state = data.get("enabled", "enabled")
-                active_state = data.get('active', 'active')
-                active_masked = data.get('masked', True)
+                active_state = data.get("active", "active")
+                active_masked = data.get("masked", True)
 
                 self.module.log(f"   unit state   : '{unit_state}'")
                 self.module.log(f"   active state : '{active_state}'")
@@ -143,37 +158,38 @@ class LibvirtService:
                     enabled=_enabled,
                 )
             else:
-                res[srv] = dict(
-                    changed=False,
-                    failed=True,
-                    msg="service not exists."
-                )
+                res[srv] = dict(changed=False, failed=True, msg="service not exists.")
 
             result_state.append(res)
 
         return result_state
 
-
-    def disable(self,
-            user_manager: bool = False,
-            services: list = [],
-            service_types: list = ["service", "socket", "timer"],
-            include_inactive: bool = True
-        ):
-        """
-        """
-        self.module.log(f"LibvirtService::disable(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})")
+    def disable(
+        self,
+        user_manager: bool = False,
+        services: list = [],
+        service_types: list = ["service", "socket", "timer"],
+        include_inactive: bool = True,
+    ):
+        """ """
+        self.module.log(
+            f"LibvirtService::disable(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})"
+        )
 
         result_state = []
         service_matches = self.systemd_services(
             user_manager=user_manager,
             services=services,
             service_types=service_types,
-            include_inactive=include_inactive
+            include_inactive=include_inactive,
         )
 
         # {'libvirtd.service': {'enabled': 'enabled', 'active': 'inactive'}, 'libvirtd.socket': {'enabled': 'enabled', 'active': 'active'}}
-        mono_states  = {u.name: dict(enabled=u.unit_file_state, active=u.active_state) for u in service_matches if u.name in self.units}
+        mono_states = {
+            u.name: dict(enabled=u.unit_file_state, active=u.active_state)
+            for u in service_matches
+            if u.name in self.units
+        }
 
         monolithic = self.any_effectively_enabled(mono_states)
 
@@ -186,7 +202,7 @@ class LibvirtService:
 
                 if sd.exists(srv):
                     unit_state = data.get("enabled", "enabled")
-                    active_state = data.get('active', 'active')
+                    active_state = data.get("active", "active")
                     self.module.log(f"   unit state   : {unit_state}")
                     self.module.log(f"   active state : {active_state}")
 
@@ -217,46 +233,50 @@ class LibvirtService:
 
         return result_state
 
-        return dict(
-            failed=False,
-            msg="all monolithic service stopped and disabled."
-        )
-
+        return dict(failed=False, msg="all monolithic service stopped and disabled.")
 
     def start(self):
-        """
-        """
+        """ """
         pass
 
     def stop(self):
-        """
-        """
+        """ """
         pass
 
     def any_effectively_enabled(self, d: dict[str, dict[str, str]]) -> bool:
 
-        enabled_states = {"enabled", "enabled-runtime", "linked", "linked-runtime", "alias"}
+        enabled_states = {
+            "enabled",
+            "enabled-runtime",
+            "linked",
+            "linked-runtime",
+            "alias",
+        }
 
-        return any((v.get("enabled") or "").lower() in enabled_states for v in d.values())
+        return any(
+            (v.get("enabled") or "").lower() in enabled_states for v in d.values()
+        )
 
-    def systemd_services(self,
-            user_manager: bool = False,
-            services: list = [],
-            service_types: list = ["service", "socket", "timer"],
-            include_inactive: bool = True
-        ):
-        """
-        """
-        self.module.log(f"LibvirtService::systemd_services(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})")
+    def systemd_services(
+        self,
+        user_manager: bool = False,
+        services: list = [],
+        service_types: list = ["service", "socket", "timer"],
+        include_inactive: bool = True,
+    ):
+        """ """
+        self.module.log(
+            f"LibvirtService::systemd_services(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})"
+        )
 
-        service_matches = []
+        service_matches: List = []
 
         with SystemdClient(user_manager=user_manager) as sd:
             try:
                 service_matches = sd.match_units(
-                  patterns=services,
-                  types=service_types,
-                  include_inactive_files=include_inactive
+                    patterns=services,
+                    types=service_types,
+                    include_inactive_files=include_inactive,
                 )
             except UnitNotFoundError:
                 self.module.log("unknown")
@@ -264,4 +284,3 @@ class LibvirtService:
         self.module.log(f"service_matches: {service_matches}")
 
         return service_matches
-

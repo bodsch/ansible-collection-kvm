@@ -4,27 +4,27 @@
 # (c) 2023, Bodo Schulz <bodo@boone-schulz.de>
 
 from __future__ import absolute_import, division, print_function
+
 import re
 
 from ansible.module_utils.basic import AnsibleModule
 
 
 class Libvirtd(object):
-    """
-    """
+    """ """
+
     module = None
 
     def __init__(self, module):
-        """
-        """
+        """ """
         self.module = module
 
-        self.libvirtd_bin = module.get_bin_path('libvirtd', True)
+        self.libvirtd_bin = module.get_bin_path("libvirtd", True)
 
     def version(self):
         """
-            # # libvirtd --version
-            # libvirtd (libvirt) 11.8.0
+        # # libvirtd --version
+        # libvirtd (libvirt) 11.8.0
         """
         _failed = True
         _version = "unknown"
@@ -39,11 +39,13 @@ class Libvirtd(object):
         rc, out = self._exec(args)
 
         if "libvirtd" in out:
-            pattern = re.compile(r".*libvirtd \(.*\) (?P<version>[0-9]+\.[0-9]+\.[0-9]+).*", re.MULTILINE)
+            pattern = re.compile(
+                r".*libvirtd \(.*\) (?P<version>[0-9]+\.[0-9]+\.[0-9]+).*", re.MULTILINE
+            )
             found = re.search(pattern, out.rstrip())
 
             if found:
-                _version = found.group('version')
+                _version = found.group("version")
                 _failed = False
         else:
             _failed = True
@@ -52,15 +54,11 @@ class Libvirtd(object):
         _stdout_lines = _stdout.split("\n")
 
         return dict(
-            stdout=_stdout,
-            stdout_lines=_stdout_lines,
-            failed=_failed,
-            version=_version
+            stdout=_stdout, stdout_lines=_stdout_lines, failed=_failed, version=_version
         )
 
     def _exec(self, commands):
-        """
-        """
+        """ """
         rc, out, err = self.module.run_command(commands, check_rc=False)
 
         if int(rc) != 0:
@@ -89,5 +87,5 @@ def main():
 
 
 # import module snippets
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

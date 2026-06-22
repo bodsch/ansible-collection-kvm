@@ -14,9 +14,24 @@ libvirt_defaults_service:
   #
   start_libvirtd: ""                                  #
   mount_cgroups: ""                                   #
-  cgroups:  []                                        #
+  cgroups: []                                         #
 
-libvirt_defaults_daemons:
+# Single source of truth for the service/socket lifecycle (enabled/state)
+# of both the monolithic 'libvirtd' and the modular 'virt*d' daemons.
+# Configuration *content* lives in libvirt_libvirtd / libvirt_qemu / libvirt_<daemon>.
+libvirt_defaults_services:
+  # --- monolithic ---
+  libvirtd:
+    service:
+      state: started
+      enabled: true
+    tcp_socket:
+      state: stopped
+      enabled: false
+    tls_socket:
+      state: stopped
+      enabled: false
+  # --- modular daemons ---
   ch:
     service:
       state: stopped
@@ -115,7 +130,7 @@ libvirt_defaults_admin:
 
 libvirt_defaults_libvirt:
   uri_dedault: ""                                     # "qemu:///system"
-  uri_aliases: []                                     # ["hail=qemu+ssh://root@hail.cloud.example.com/system", "sleet=qemu+ssh://root@sleet.cloud.example.com/system",]
+  uri_aliases: []                                     # ["hail=qemu+ssh://root@hail.example.com/system", "sleet=qemu+ssh://root@sleet.example.com/system"]
 
 libvirt_defaults__defauls: &CONFIG_DEFAULTS
   unix_sock_group: "libvirt"                          #
@@ -178,7 +193,7 @@ libvirt_defaults_interface:
     - 4:object
     - 4:json
     - 4:event
-     -1:util
+    - 1:util
   log_outputs:
     - 3:syslog:virtinterfaced
 
@@ -276,7 +291,7 @@ libvirt_defaults_nodedev:
     - 4:event
     - 1:util
   log_outputs:
-    - 3:syslog:virtnodevd
+    - 3:syslog:virtnodedevd
 
 libvirt_defaults_nwfilter:
   <<: *CONFIG_DEFAULTS

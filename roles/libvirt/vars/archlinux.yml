@@ -2,7 +2,7 @@
 
 libvirt_dependecies:
   - dmidecode
-  - bridge-utils
+  # - bridge-utils
   - python-pip
   - python-lxml
   - python-dbus

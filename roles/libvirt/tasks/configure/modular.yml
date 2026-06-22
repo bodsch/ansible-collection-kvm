@@ -179,36 +179,3 @@
     path: /etc/libvirt
     hold: 2
 
-- name: disable monolithic daemons
-  bodsch.kvm.monolithic_services:
-    state: disable
-    units:
-      - libvirtd.service
-      - libvirtd.socket
-      - libvirtd-ro.socket
-      - libvirtd-admin.socket
-      - libvirtd-tcp.socket
-      - libvirtd-tls.socket
-  register: _service_states
-  notify:
-    - daemon-reload
-
-- name: merge libvirt config configuration between defaults and custom
-  ansible.builtin.set_fact:
-    libvirt_daemons: "{{ libvirt_defaults_daemons | combine(libvirt_daemons, recursive=True) }}"
-  no_log: true
-
-- name: enable modular daemon sockets
-  bodsch.kvm.modular_services:
-    state: enable
-    units: "{{ libvirt_daemons | bodsch.kvm.modular_daemons(only_sockets=True) }}"
-  register: _service_states
-  # ignore_errors: true
-  notify:
-    - daemon-reload
-#
-# # libvirtd.socket
-#
-- name: flush handlers
-  ansible.builtin.meta: flush_handlers
-

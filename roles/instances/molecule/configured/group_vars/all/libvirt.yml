@@ -3,7 +3,7 @@
 libvirt_libvirtd:
   enable_tcp: true
   tcp_port: 16509
-  listen_addr: "{{ ansible_default_ipv4.address }}"
+  listen_addr: "{{ ansible_facts.default_ipv4.address }}"
   auth_unix_ro: "none"
   auth_unix_rw: "none"
   # https://libvirt.org/kbase/debuglogs.html#libvirt-daemons-logging-configuration

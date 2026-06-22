@@ -6,14 +6,13 @@
   block:
     - name: modular services
       when:
-        - libvirtd_version is version_compare("10", operator='>')
+        - libvirtd_version is version_compare("10", operator='>=')
       block:
         - name: enable virtproxyd daemon
           bodsch.kvm.modular_services:
             state: enable
             units:
               - virtnetworkd.socket
-          register: _service_states
           # ignore_errors: true
           notify:
             - daemon-reload
@@ -23,7 +22,6 @@
             state: start
             units:
               - virtnetworkd.socket
-          register: _service_states
           notify:
             - daemon-reload
 
@@ -42,7 +40,7 @@
             - restart libvirtd-tcp.socket
           when:
             - not ansible_check_mode
-            - ansible_service_mgr | lower == "systemd"
+            - ansible_facts.service_mgr | lower == "systemd"
 
         - name: enable / disable libvirtd-tls.socket
           become: true
@@ -54,7 +52,7 @@
             - restart libvirtd-tls.socket
           when:
             - not ansible_check_mode
-            - ansible_service_mgr | lower == "systemd"
+            - ansible_facts.service_mgr | lower == "systemd"
 
     # wait for ...
     #  - /run/libvirt/virtnetworkd-sock

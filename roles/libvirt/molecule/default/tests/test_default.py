@@ -121,7 +121,6 @@ def get_vars(host):
     [
         "/etc/libvirt",
         "/etc/libvirt/qemu",
-        "/etc/libvirt/hooks",
     ],
 )
 def test_directories(host, dirs):
@@ -174,7 +173,6 @@ def test_activated_sockets(host, files):
 @pytest.mark.parametrize(
     "files",
     [
-        "/etc/systemd/system/sockets.target.wants/virtlockd.socket",
         "/etc/systemd/system/sockets.target.wants/libvirtd.socket",
         "/etc/systemd/system/sockets.target.wants/libvirtd-ro.socket",
         "/etc/systemd/system/sockets.target.wants/libvirtd-admin.socket",

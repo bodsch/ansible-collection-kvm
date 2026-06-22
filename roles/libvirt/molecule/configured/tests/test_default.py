@@ -363,7 +363,7 @@ def test_directories(host, dirs):
 #         assert listen_tcp_port in config_file.content_string
 #     else:
 #
-#         _conf_daemons = get_vars.get("libvirt_daemons", {})
+#         _conf_daemons = get_vars.get("libvirt_services", {})
 #
 #         print(pp_json(_conf_daemons))
 #
@@ -388,24 +388,37 @@ def test_directories(host, dirs):
 
 def test_service_running_and_enabled(host, get_vars):
     """
-    running service
+    The role uses the monolithic 'libvirtd' below libvirt 10 and switches to the
+    modular 'virt*d' daemons from libvirt 10 onwards (driven by libvirt_services).
     """
     _version = version(host)
 
     print(f"installed version: {_version}")
 
-    # modular > version 10.
-    if Version(_version) < Version("9.0"):
+    if Version(_version) < Version("10.0"):
+        # monolithic: a single, socket-activated libvirtd
         service = host.service("libvirtd")
         assert service.is_running
         assert service.is_enabled
     else:
-        services = ["libvirtd.socket", "virtlockd.socket", "virtlogd.socket"]
+        # modular: per-driver sockets are enabled via libvirt_services
+        enabled_sockets = [
+            "virtqemud.socket",
+            "virtstoraged.socket",
+            "virtlockd.socket",
+            "virtlogd.socket",
+        ]
 
-        for s in services:
-            service = host.service(s)
-            assert service.is_running
-            assert service.is_enabled
+        for s in enabled_sockets:
+            assert host.service(s).is_enabled, f"{s} is expected to be enabled"
+
+        # virtlockd / virtlogd are always socket-activated and must be running
+        for s in ["virtlockd.socket", "virtlogd.socket"]:
+            assert host.service(s).is_running, f"{s} is expected to be running"
+
+        # the monolithic libvirtd must be disabled on a modular host
+        assert not host.service("libvirtd.socket").is_enabled, \
+            "libvirtd.socket must be disabled on a modular host"
 
 # TODO
 # def test_listening_socket(host, get_vars):

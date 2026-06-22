@@ -4,29 +4,29 @@
   become: true
   ansible.builtin.service:
     name: libvirtd-tcp.socket
-    enabled: "{{ 'true' if libvirt_libvirtd.enable_tcp else 'false' }}"
+    enabled: "{{ libvirt_services.libvirtd.tcp_socket.enabled | default(false) | bool }}"
   failed_when: false
   notify:
     - restart libvirtd-tcp.socket
     - wait for running libvirtd
   when:
     - not ansible_check_mode
-    - ansible_service_mgr | lower == "systemd"
-    - libvirt_services.libvirtd.enabled
+    - ansible_facts.service_mgr | lower == "systemd"
+    - libvirt_services.libvirtd.service.enabled | default(true) | bool
 
 - name: enable / disable libvirtd-tls.socket
   become: true
   ansible.builtin.service:
     name: libvirtd-tls.socket
-    enabled: "{{ 'true' if libvirt_libvirtd.enable_tls else 'false' }}"
+    enabled: "{{ libvirt_services.libvirtd.tls_socket.enabled | default(false) | bool }}"
   failed_when: false
   notify:
     - restart libvirtd-tls.socket
     - wait for running libvirtd
   when:
     - not ansible_check_mode
-    - ansible_service_mgr | lower == "systemd"
-    - libvirt_services.libvirtd.enabled
+    - ansible_facts.service_mgr | lower == "systemd"
+    - libvirt_services.libvirtd.service.enabled | default(true) | bool
 
 - name: flush handlers
   ansible.builtin.meta: flush_handlers
@@ -39,7 +39,6 @@
     state: started
   when:
     - not ansible_check_mode
-    - libvirt_services.libvirtd.enabled
-    - _service_states.monolithic
+    - libvirt_services.libvirtd.service.enabled | default(true) | bool
 
 ...

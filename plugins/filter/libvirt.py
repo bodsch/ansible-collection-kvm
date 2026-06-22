@@ -76,6 +76,10 @@ class FilterModule(object):
             f"modular_daemons({data}, only_sockets: {only_sockets}, only_services: {only_services})"
         )
 
+        # The monolithic 'libvirtd' shares the same libvirt_services dict but is
+        # never a modular virt*d daemon; drop it before generating unit names.
+        data = {k: v for k, v in data.items() if k != "libvirtd"}
+
         result = []
 
         enabled_sockets = []
@@ -89,13 +93,12 @@ class FilterModule(object):
             enabled_sockets = self.only_enabled(sockets)
             enabled_sockets = list(enabled_sockets.keys())
 
-            sockets = [f"virt{x}d-ro.socket" for x in enabled_sockets]
-            sockets += [f"virt{x}d-admin.socket" for x in enabled_sockets]
-            result += sockets
+            for x in enabled_sockets:
+                result += self.modular_socket_units(x)
 
         if only_services:
             services = {
-                k: {ik: iv for ik, iv in v.items() if ik != "sockets"}
+                k: {ik: iv for ik, iv in v.items() if ik != "socket"}
                 for k, v in data.items()
             }
             enabled_services = self.only_enabled(services)
@@ -107,6 +110,22 @@ class FilterModule(object):
         display.v(f"= result: {result}")
 
         return result
+
+    def modular_socket_units(self, daemon, no_ro_socket=("lock", "log")):
+        """
+        Return the systemd socket units for a single modular daemon.
+
+        Every daemon provides a primary 'virt<daemon>d.socket' and an
+        '-admin.socket'. All daemons except virtlockd/virtlogd additionally
+        provide a read-only '-ro.socket'. The proxy daemon's -tcp/-tls sockets
+        are configuration-dependent and handled by libvirt_proxy_daemons().
+        """
+        units = [f"virt{daemon}d.socket"]
+        if daemon not in no_ro_socket:
+            units.append(f"virt{daemon}d-ro.socket")
+        units.append(f"virt{daemon}d-admin.socket")
+
+        return units
 
     def libvirt_proxy_daemons(
         self, data, config={}, only_sockets=False, only_services=False

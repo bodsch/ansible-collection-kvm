@@ -19,7 +19,7 @@
   block:
     - name: modular services
       when:
-        - libvirtd_version is version_compare("10", operator='>')
+        - libvirtd_version is version_compare("10", operator='>=')
       block:
         - name: enable virtproxyd daemon
           bodsch.kvm.modular_services:
@@ -28,7 +28,6 @@
               - virtproxyd.socket
               - virtqemud.socket
               - virtstoraged.socket
-          register: _service_states
           # ignore_errors: true
           notify:
             - daemon-reload
@@ -40,7 +39,6 @@
               - virtproxyd.socket
               - virtqemud.socket
               - virtstoraged.socket
-          register: _service_states
           notify:
             - daemon-reload
 

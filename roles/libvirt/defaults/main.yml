@@ -9,8 +9,22 @@ libvirt_service: {}
 #   mount_cgroups: ""                                   #
 #   cgroups:  []                                        #
 
+# Service/socket lifecycle for both the monolithic 'libvirtd' and the modular
+# 'virt*d' daemons. Merged over libvirt_defaults_services (see vars/main.yml).
 # https://libvirt.org/daemons.html#monolithic-vs-modular-daemons
-libvirt_daemons: {}
+libvirt_services: {}
+#   # --- monolithic ---
+#   libvirtd:
+#     service:
+#       state: started
+#       enabled: true
+#     tcp_socket:
+#       state: stopped
+#       enabled: false
+#     tls_socket:
+#       state: stopped
+#       enabled: false
+#   # --- modular daemons ---
 #   ch:
 #     service:
 #       state: stopped
@@ -137,8 +151,6 @@ libvirt_storage_pools: []
 
 # monolithic
 libvirt_libvirtd: {}
-
-libvirt_qemu: {}
 
 # libvirt_network: {}
   # Supported settings:

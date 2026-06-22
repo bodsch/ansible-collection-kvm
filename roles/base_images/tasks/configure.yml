@@ -1,0 +1,48 @@
+---
+
+# The pool is created by bodsch.kvm.storage_pool; here we only consume it.
+- name: ensure storage pool is active
+  community.libvirt.virt_pool:
+    name: "{{ base_images_libvirt.pool }}"
+    state: active
+    uri: "{{ base_images_libvirt.uri }}"
+
+- name: get storage pool xml
+  community.libvirt.virt_pool:
+    name: "{{ base_images_libvirt.pool }}"
+    command: get_xml
+    uri: "{{ base_images_libvirt.uri }}"
+  register: base_images_pool_xml
+
+- name: extract storage pool path
+  ansible.builtin.xml:
+    xmlstring: "{{ base_images_pool_xml.get_xml }}"
+    content: text
+    xpath: /pool/target/path
+  register: base_images_pool_path_xml
+
+- name: set storage pool path fact
+  ansible.builtin.set_fact:
+    base_images_pool_path: "{{ base_images_pool_path_xml.matches[0].path }}"
+
+- name: download base images into the pool
+  become: true
+  ansible.builtin.get_url:
+    url: "{{ item.source }}"
+    dest: "{{ base_images_pool_path }}/{{ item.dest }}"
+    checksum: "{{ item.checksum | default(omit) }}"
+    mode: u=rw,g=r,o=r
+  loop: "{{ base_images }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  register: base_images_downloaded
+
+- name: refresh storage pool so libvirt registers the new volumes
+  community.libvirt.virt_pool:
+    name: "{{ base_images_libvirt.pool }}"
+    command: refresh
+    uri: "{{ base_images_libvirt.uri }}"
+  when:
+    - base_images_downloaded is changed
+
+...

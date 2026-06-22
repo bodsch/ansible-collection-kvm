@@ -1,0 +1,11 @@
+---
+
+- name: prepare
+  ansible.builtin.include_tasks: prepare.yml
+
+- name: download base images
+  ansible.builtin.include_tasks: configure.yml
+  when:
+    - base_images | default([]) | count > 0
+
+...

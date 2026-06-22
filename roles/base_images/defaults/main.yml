@@ -1,0 +1,18 @@
+---
+
+base_images_libvirt:
+  uri: "qemu:///system"
+  pool: "default"             # storage pool to import into (created by storage_pool)
+
+# Base / cloud images to download into the pool. Each item:
+#   source:   URL of the qcow2 image                              (required)
+#   dest:     volume file name inside the pool                    (required)
+#             -> referenced by instances_os_base_volumes[<os>]
+#   checksum: optional checksum for get_url, e.g. "sha256:<hash>" or "sha256:<url>"
+base_images: []
+#   - source: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+#     dest: "debian-12-base.qcow2"
+#   - source: "https://geo.mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2"
+#     dest: "archlinux-base.qcow2"
+
+...

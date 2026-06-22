@@ -13,7 +13,7 @@ instances_graphics:
 instances_ssh_public_key: ""
 
 # Base image volume per instance `os` value. The referenced volumes must already
-# exist in instances_libvirt.pool (provisioned out of band).
+# exist in instances_libvirt.pool (e.g. provisioned by the bodsch.kvm.base_images role).
 instances_os_base_volumes: {}
 #   debian: debian-12-base.qcow2
 #   arch: archlinux-base.qcow2

@@ -17,13 +17,13 @@
 
 - name: extract storage pool path
   ansible.builtin.xml:
-    xmlstring: "{{ instances_pool_xml.msg }}"
+    xmlstring: "{{ instances_pool_xml.get_xml }}"
     content: text
     xpath: /pool/target/path
   register: instances_pool_path_xml
 
 - name: set storage pool path fact
   ansible.builtin.set_fact:
-    instances_pool_path: "{{ instances_pool_path_xml.matches[0].pool.target.path }}"
+    instances_pool_path: "{{ instances_pool_path_xml.matches[0].path }}"
 
 ...

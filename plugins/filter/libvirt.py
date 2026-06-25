@@ -58,11 +58,12 @@ class FilterModule(object):
         """
         The following modular daemons currently exist for hypervisor drivers
 
-            - virtqemud - the QEMU management daemon, for running virtual machines on UNIX platforms, optionally with KVM acceleration, in either system or session mode
-            - virtxend - the Xen management daemon, for running virtual machines on the Xen hypervisor, in system mode only
-            - virtlxcd - the Linux Container management daemon, for running LXC guests in system mode only
+            - virtqemud  - the QEMU management daemon, for running virtual machines on UNIX platforms, optionally with KVM acceleration,
+                           in either system or session mode
+            - virtxend   - the Xen management daemon, for running virtual machines on the Xen hypervisor, in system mode only
+            - virtlxcd   - the Linux Container management daemon, for running LXC guests in system mode only
             - virtbhyved - the BHyve management daemon, for running virtual machines on FreeBSD with the BHyve hypervisor, in system mode.
-            - virtvboxd - the VirtualBox management daemon, for running virtual machines on UNIX platforms.
+            - virtvboxd  - the VirtualBox management daemon, for running virtual machines on UNIX platforms.
 
         The additional modular daemons service secondary drivers
 

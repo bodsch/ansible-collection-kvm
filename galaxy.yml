@@ -26,7 +26,8 @@ dependencies:
  ansible.posix: "*"
  community.general: ">=10.5"
  community.libvirt: ">=2.0"
- bodsch.core: "*"
+ bodsch.core: ">=2.13.5"
+ bodsch.systemd: ">=1.5.0"
 
 repository: https://github.com/bodsch/ansible-collection-kvm
 documentation: https://github.com/bodsch/ansible-collection-kvm/README.md

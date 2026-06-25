@@ -1,0 +1,28 @@
+---
+
+# ansible_local is gathered at play start; refresh it so a libvirt role that ran
+# earlier in the same play has its 'libvirtd' fact visible here.
+- name: refresh local facts
+  ansible.builtin.setup:
+    filter: ansible_local
+  when:
+    - not ansible_check_mode
+
+- name: ensure libvirt has been provisioned
+  ansible.builtin.assert:
+    that:
+      - ansible_local.libvirtd is defined
+      - ansible_local.libvirtd.version is defined
+    fail_msg: "libvirt is not provisioned on this host. Run the bodsch.kvm.libvirt role first."
+    quiet: true
+
+# Reuse the model libvirt already resolved (honours libvirt_daemon_model); fall
+# back to the version heuristic for facts written by an older libvirt role.
+- name: resolve effective daemon model from libvirt facts
+  ansible.builtin.set_fact:
+    storage_pool_use_modular: "{{
+      ansible_local.libvirtd.use_modular
+      | default(ansible_local.libvirtd.version is version_compare('10', operator='>='))
+      | bool }}"
+
+...

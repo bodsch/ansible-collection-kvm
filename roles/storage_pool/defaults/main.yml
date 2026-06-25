@@ -1,0 +1,23 @@
+---
+
+# libvirt storage pools to manage on this host.
+# Each item:
+#   name:      pool name                              (required)
+#   path:      target directory (type=dir)            (required unless state: absent)
+#   uuid:      optional fixed pool UUID
+#   state:     active | inactive | present | absent   (default: present)
+#   autostart: true | false
+#   mode:      optional target permissions, e.g. "0711"
+#   owner:     optional target owner uid/name
+#   group:     optional target group gid/name
+storage_pools: []
+#   - name: pool
+#     uuid: 4b39e9c3-b4b9-49b0-8ef9-9caa3d985410
+#     path: /var/lib/libvirt/pool
+#     autostart: true
+#     state: active
+#     mode: "0711"
+#     owner: "0"
+#     group: "0"
+
+...

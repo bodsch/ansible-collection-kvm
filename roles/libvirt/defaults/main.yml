@@ -1,5 +1,11 @@
 ---
 
+# Which libvirt daemon model to use:
+#   auto       - monolithic 'libvirtd' below libvirt 10, modular 'virt*d' from 10 onwards
+#   monolithic - always use the monolithic libvirtd (also on libvirt >= 10)
+#   modular    - always use the modular virt*d daemons
+libvirt_daemon_model: "auto"
+
 libvirt_service: {}
 #   libvirtd_args: []                                   # '--timeout 120' | --listen | ...
 #   qemu_audio_drv: ""                                  # sdl
@@ -9,8 +15,22 @@ libvirt_service: {}
 #   mount_cgroups: ""                                   #
 #   cgroups:  []                                        #
 
+# Service/socket lifecycle for both the monolithic 'libvirtd' and the modular
+# 'virt*d' daemons. Merged over libvirt_defaults_services (see vars/main.yml).
 # https://libvirt.org/daemons.html#monolithic-vs-modular-daemons
-libvirt_daemons: {}
+libvirt_services: {}
+#   # --- monolithic ---
+#   libvirtd:
+#     service:
+#       state: started
+#       enabled: true
+#     tcp_socket:
+#       state: stopped
+#       enabled: false
+#     tls_socket:
+#       state: stopped
+#       enabled: false
+#   # --- modular daemons ---
 #   ch:
 #     service:
 #       state: stopped
@@ -131,14 +151,8 @@ libvirt_storage: {}
 
 libvirt_vbox: {}
 
-libvirt_virtual_networks: []
-
-libvirt_storage_pools: []
-
 # monolithic
 libvirt_libvirtd: {}
-
-libvirt_qemu: {}
 
 # libvirt_network: {}
   # Supported settings:

@@ -1,0 +1,27 @@
+---
+
+galaxy_info:
+  role_name: base_images
+  namespace: bodsch
+
+  author: Bodo Schulz
+  description: download libvirt base / cloud images into a storage pool
+
+  license: Apache
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: ArchLinux
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - system
+    - libvirt
+    - kvm
+    - images
+
+dependencies: []
+
+...

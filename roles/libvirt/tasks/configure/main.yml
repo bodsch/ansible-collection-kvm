@@ -18,28 +18,32 @@
 #   notify:
 #     - restart {{ libvirt_service.name }}
 
+- name: ensure dbus service are running
+  ansible.builtin.service:
+    name: dbus.service
+    state: started
+  when:
+    - not ansible_check_mode
+
+- name: merge service/socket lifecycle defaults with custom settings
+  ansible.builtin.set_fact:
+    libvirt_services: "{{ libvirt_defaults_services | combine(libvirt_services, recursive=True) }}"
+
 - name: configure monolithic services
   ansible.builtin.include_tasks: configure/monolithic.yml
   when:
     - not ansible_check_mode
-    - ansible_service_mgr | lower == "systemd"
-    - libvirtd_version is version_compare("10", operator='<')
+    - ansible_facts.service_mgr | lower == "systemd"
+    - not (libvirt_use_modular | bool)
 
 - name: configure modular services
   ansible.builtin.include_tasks: configure/modular.yml
   when:
     - not ansible_check_mode
-    - ansible_service_mgr | lower == "systemd"
-    - libvirtd_version is version_compare("10", operator='>')
+    - ansible_facts.service_mgr | lower == "systemd"
+    - libvirt_use_modular | bool
 
-- name: configure storage pools
-  ansible.builtin.include_tasks: configure/libvirt_storage_pools.yml
-  when:
-    - libvirt_storage_pools is defined
-    - libvirt_storage_pools | default([]) | count > 0
+# Storage pools and virtual networks are handled by the dedicated
+# bodsch.kvm.storage_pool and bodsch.kvm.network roles.
 
-- name: configure networks
-  ansible.builtin.include_tasks: configure/libvirt_networks.yml
-  when:
-    - libvirt_virtual_networks is defined
-    - libvirt_virtual_networks | default([]) | count > 0
+...

@@ -1,0 +1,19 @@
+---
+
+# pool to import into, provisioned by storage_pool in prepare.yml
+storage_pools:
+  - name: pool
+    path: /var/lib/libvirt/pool
+    state: active
+    autostart: true
+
+base_images_libvirt:
+  uri: "qemu:///system"
+  pool: "pool"
+
+# tiny cirros image keeps the CI download cheap (~16 MB)
+base_images:
+  - source: "https://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img"
+    dest: "cirros-0.6.2.qcow2"
+
+...

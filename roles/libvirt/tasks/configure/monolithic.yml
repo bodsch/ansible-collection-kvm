@@ -7,10 +7,6 @@
     libvirt_qemu: "{{ libvirt_defaults_monolithic_qemu | combine(libvirt_qemu, recursive=True) }}"
     libvirt_network: "{{ libvirt_defaults_monolithic_network | combine(libvirt_network, recursive=True) }}"
 
-- name: d
-  debug:
-    msg: "{{ libvirt_service }}"
-
 - name: create libvirtd.conf
   become: true
   ansible.builtin.template:

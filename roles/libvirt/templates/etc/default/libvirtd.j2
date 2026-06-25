@@ -20,7 +20,7 @@ QEMU_AUDIO_DRV={{ libvirt_service.qemu_audio_drv }}
 SDL_AUDIODRIVER={{ libvirt_service.sdl_audiodriver }}
   {% endif %}
 
-  {% if not ansible_service_mgr | lower == "systemd" %}
+  {% if not ansible_facts.service_mgr | lower == "systemd" %}
 #############################################################
 ### The following settings are IGNORED when using systemd ###
 #############################################################

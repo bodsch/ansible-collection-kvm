@@ -1,0 +1,25 @@
+---
+
+# libvirt virtual networks to manage on this host.
+# Each item:
+#   name:        network name                              (required)
+#   mode:        bridge | nat | private | route
+#   bridge_name: bridge device, e.g. br0
+#   uuid:        optional fixed network UUID
+#   state:       active | inactive | present | absent      (default: present)
+#   autostart:   true | false
+# Optional DHCP/DNS keys: enable_dhcp, dhcp_gateway, dhcp_netmask,
+#   dhcp_scope_start, dhcp_scope_end, vlan, vlans, virtualport_type, route_device
+virtual_networks: []
+#   - name: NATting
+#     mode: bridge
+#     bridge_name: br0
+#     autostart: true
+#     state: active
+
+# Used only when a network sets enable_dhcp: true
+network_domain_name: ""
+network_dns_primary: ""
+network_dns_secondary: ""
+
+...

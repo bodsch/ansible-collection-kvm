@@ -1,0 +1,24 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+<!-- {{ ansible_managed }} -->
+<pool type="dir">
+  <name>{{ item.name }}</name>
+{% if item.uuid | d() %}
+  <uuid>{{ item.uuid }}</uuid>
+{% endif %}
+  <target>
+    <path>{{ item.path }}</path>
+{% if item.mode is defined or item.owner is defined or item.group is defined %}
+    <permissions>
+{% if item.mode is defined %}
+      <mode>{{ item.mode }}</mode>
+{% endif %}
+{% if item.owner is defined %}
+      <owner>{{ item.owner }}</owner>
+{% endif %}
+{% if item.group is defined %}
+      <group>{{ item.group }}</group>
+{% endif %}
+    </permissions>
+{% endif %}
+  </target>
+</pool>

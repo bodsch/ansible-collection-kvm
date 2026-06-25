@@ -1,267 +1,181 @@
-
 # -*- coding: utf-8 -*-
 
-# (c) 2020-2023, Bodo Schulz <bodo@boone-schulz.de>
+# (c) 2020-2025, Bodo Schulz <bodo@boone-schulz.de>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import absolute_import, division, print_function
 
-import os
-import shutil
-
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.bodsch.systemd.plugins.module_utils.systemd import SystemdClient, SystemdError, UnitNotFoundError, AccessDeniedError, DBusIOError
-
+from ansible_collections.bodsch.systemd.plugins.module_utils.systemd import (
+    AccessDeniedError,
+    SystemdClient,
+    SystemdError,
+    UnitNotFoundError,
+)
 
 
 class LibvirtService:
     """
+    Shared helper for managing libvirt systemd units, both the monolithic
+    'libvirtd' and the modular 'virt*d' daemons.
+
+    Every lifecycle method takes an explicit list of unit names, operates
+    idempotently based on the current systemd UnitStatus, and returns a
+    ``result_state`` list compatible with bodsch.core ... results()::
+
+        [ {unit_name: {"changed": bool, "failed": bool, ...}}, ... ]
     """
-    def __init__(self, module):
-        """
-        """
+
+    SERVICE_TYPES = ["service", "socket", "timer"]
+
+    def __init__(self, module, user_manager: bool = False):
+        """ """
         self.module = module
+        self.user_manager = user_manager
         self.module.log("LibvirtService::__init__()")
 
+    # -- discovery ---------------------------------------------------------
 
-    def verify(self,
-            user_manager: bool = False,
-            services: list = [],
-            service_types: list = ["service", "socket", "timer"],
-            include_inactive: bool = True
-        ):
-        """
-        """
-        self.module.log(f"LibvirtService::verify(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})")
+    def _status_map(self, sd, units: list) -> dict:
+        """Return ``{unit_name: UnitStatus}`` for the requested units."""
+        matches = sd.match_units(
+            patterns=units,
+            types=self.SERVICE_TYPES,
+            include_inactive_files=True,
+        )
+        return {u.name: u for u in matches if u.name in units}
 
+    def verify(self, units: list) -> dict:
+        """Return the current state of each requested unit without changing it."""
+        self.module.log(f"LibvirtService::verify(units: {units})")
+
+        with SystemdClient(user_manager=self.user_manager) as sd:
+            status = self._status_map(sd, units)
+
+        return {
+            name: dict(
+                enabled=u.is_enabled,
+                unit_file_state=u.unit_file_state,
+                active=u.active_state,
+                masked=u.is_masked,
+            )
+            for name, u in status.items()
+        }
+
+    # -- lifecycle ---------------------------------------------------------
+
+    def enable(self, units: list, runtime: bool = False) -> list:
+        """Unmask (if masked) and enable (if not already enabled) each unit."""
+        self.module.log(f"LibvirtService::enable(units: {units}, runtime: {runtime})")
+        return self._apply(units, self._enable_one, runtime=runtime)
+
+    def disable(self, units: list) -> list:
+        """Stop (if active) and disable (if enabled) each unit."""
+        self.module.log(f"LibvirtService::disable(units: {units})")
+        return self._apply(units, self._disable_one)
+
+    def start(self, units: list, timeout: float = 60) -> list:
+        """Start (and wait for) each unit that is not already active."""
+        self.module.log(f"LibvirtService::start(units: {units})")
+        return self._apply(units, self._start_one, timeout=timeout)
+
+    def stop(self, units: list) -> list:
+        """Stop each unit that is currently active."""
+        self.module.log(f"LibvirtService::stop(units: {units})")
+        return self._apply(units, self._stop_one)
+
+    # -- internals ---------------------------------------------------------
+
+    def _apply(self, units: list, fn, **kwargs) -> list:
+        """
+        Open a single SystemdClient connection, look up the state of every
+        requested unit and dispatch each one to ``fn``. Units that do not
+        exist are reported as skipped; per-unit systemd errors are captured
+        as a failure for that unit instead of aborting the whole run.
+        """
         result_state = []
 
-        service_matches = self.systemd_services(
-            user_manager=user_manager,
-            services=services,
-            service_types=service_types,
-            include_inactive=include_inactive
-        )
+        with SystemdClient(user_manager=self.user_manager) as sd:
+            status = self._status_map(sd, units)
 
-        # self.module.log(f"name: {'Name':27} kind: {'Kind':7} state (active): {'state active':10} state (sub): {r.sub_state:8} masked: {r.is_masked} state: {(r.unit_file_state or '-'):10} {(r.load_state or '-'):10} {r.description}")
-        for r in service_matches:
-            self.module.log(f"name: {r.name:27} kind: {r.kind:7} state (active / sub): {r.active_state:8} / {r.sub_state:8} masked: {r.is_masked:7} state: {(r.unit_file_state or '-'):10}") # {(r.load_state or '-'):10} {r.description}")
+            for name in units:
+                unit = status.get(name)
 
-        return service_matches
+                if unit is None or not sd.exists(name):
+                    self.module.log(f"  - {name}: not present, skipped")
+                    result_state.append(
+                        {name: dict(changed=False, skipped=True, msg="unit not present")}
+                    )
+                    continue
 
-        # # {'libvirtd.service': {'enabled': 'enabled', 'active': 'inactive'}, 'libvirtd.socket': {'enabled': 'enabled', 'active': 'active'}}
-        # mono_states  = {u.name: dict(enabled=u.unit_file_state, active=u.active_state) for u in service_matches if u.name in ["libvirtd.socket", "libvirtd.service"]}
-        # # {'virtqemud.service': {'enabled': 'disabled', 'active': 'inactive'}, 'virtqemud.socket': {'enabled': 'disabled', 'active': 'inactive'}}
-        # modu_states  = {u.name: dict(enabled=u.unit_file_state, active=u.active_state) for u in service_matches if u.name in ["virtqemud.socket", "virtqemud.service"]}
-        #
-        # monolithic = self.any_effectively_enabled(mono_states)
-        # modular = self.any_effectively_enabled(modu_states)
-        #
-        # # self.module.log(f"{mono_states}")
-        # # self.module.log(f"{modu_states}")
-        #
-        # # self.module.log(f"monolithic: {monolithic}")
-        # # self.module.log(f"modulate  : {modular}")
-        #
-        # return dict(
-        #     failed=False,
-        #     changed=False,
-        #     monolithic=monolithic,
-        #     modular=modular
-        # )
-        #
-        # #for r in results:
-        # #    self.module.log(f"{r.name:40} {r.kind:7} {r.active_state:10} {r.sub_state:8} {(r.unit_file_state or '-'):10} {(r.load_state or '-'):10} {r.description}")
-        #
-        # return result_state
-
-    def enable(self,
-            user_manager: bool = False,
-            services: list = [],
-            service_types: list = ["service", "socket", "timer"],
-            include_inactive: bool = True
-        ):
-        """
-        """
-        self.module.log(f"LibvirtService::enable(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})")
-
-        result_state = []
-        service_matches = self.systemd_services(
-            user_manager=user_manager,
-            services=services,
-            service_types=service_types,
-            include_inactive=include_inactive
-        )
-
-        # {'libvirtd.service': {'enabled': 'enabled', 'active': 'inactive'}, 'libvirtd.socket': {'enabled': 'enabled', 'active': 'active'}}
-        _states  = {u.name: dict(masked=u.is_masked, enabled=u.unit_file_state, active=u.active_state) for u in service_matches if u.name in self.units}
-
-        # modular = self.any_effectively_enabled(_states)
-
-        self.module.log(f"states : {_states}")
-        # self.module.log(f"modular: {modular}")
-
-        for srv, data in _states.items():
-            self.module.log(f"- service: {srv} - {data}")
-            res = {}
-
-            if sd.exists(srv):
-                _unmasked = False
-                _enabled = False
-                _changed = False
-
-                unit_state = data.get("enabled", "enabled")
-                active_state = data.get('active', 'active')
-                active_masked = data.get('masked', True)
-
-                self.module.log(f"   unit state   : '{unit_state}'")
-                self.module.log(f"   active state : '{active_state}'")
-                self.module.log(f"   active mask  : '{active_masked}'")
-
-                if active_masked:
-                    try:
-                        _unmasked, _ = sd.unmask([srv])
-                        self.module.log(f"unmask: {_unmasked}")
-                        _changed = True
-
-                    except UnitNotFoundError:
-                        self.module.log("unknown")
-
-                if not active_state == "active":
-                    try:
-                        _enabled, _ = sd.enable([srv])
-                        self.module.log(f"activate: {_enabled}")
-                        _changed = True
-
-                    except UnitNotFoundError:
-                        self.module.log("unknown")
-
-                res[srv] = dict(
-                    changed=_changed,
-                    unmasked=_unmasked,
-                    enabled=_enabled,
-                )
-            else:
-                res[srv] = dict(
-                    changed=False,
-                    failed=True,
-                    msg="service not exists."
-                )
-
-            result_state.append(res)
+                try:
+                    result_state.append({name: fn(sd, name, unit, **kwargs)})
+                except (UnitNotFoundError, AccessDeniedError, SystemdError) as e:
+                    self.module.log(f"  - {name}: {e}")
+                    result_state.append(
+                        {name: dict(changed=False, failed=True, msg=str(e))}
+                    )
 
         return result_state
 
+    def _enable_one(self, sd, name: str, unit, runtime: bool = False) -> dict:
+        """ """
+        unmasked = False
+        enabled = False
 
-    def disable(self,
-            user_manager: bool = False,
-            services: list = [],
-            service_types: list = ["service", "socket", "timer"],
-            include_inactive: bool = True
-        ):
-        """
-        """
-        self.module.log(f"LibvirtService::disable(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})")
+        if unit.is_masked:
+            sd.unmask([name])
+            unmasked = True
 
-        result_state = []
-        service_matches = self.systemd_services(
-            user_manager=user_manager,
-            services=services,
-            service_types=service_types,
-            include_inactive=include_inactive
-        )
+        if not unit.is_enabled:
+            sd.enable([name], runtime=runtime)
+            enabled = True
 
-        # {'libvirtd.service': {'enabled': 'enabled', 'active': 'inactive'}, 'libvirtd.socket': {'enabled': 'enabled', 'active': 'active'}}
-        mono_states  = {u.name: dict(enabled=u.unit_file_state, active=u.active_state) for u in service_matches if u.name in self.units}
-
-        monolithic = self.any_effectively_enabled(mono_states)
-
-        self.module.log(f"{mono_states}")
-        self.module.log(f"monolithic: {monolithic}")
-
-        if monolithic:
-            for srv, data in mono_states.items():
-                self.module.log(f"- service: {srv} - {data}")
-
-                if sd.exists(srv):
-                    unit_state = data.get("enabled", "enabled")
-                    active_state = data.get('active', 'active')
-                    self.module.log(f"   unit state   : {unit_state}")
-                    self.module.log(f"   active state : {active_state}")
-
-                    service_file = sd.is_active(srv)
-                    try:
-                        service_state = sd.active_state(srv)
-                    except UnitNotFoundError:
-                        pass
-
-                    self.module.log(f"   service file : {service_file}")
-                    self.module.log(f"   service state: {service_state}")
-
-                    if active_state == "active":
-                        self.module.log("  stop")
-                        try:
-                            state = sd.stop(srv)
-                            self.module.log(f"   state: {state}")
-                        except UnitNotFoundError:
-                            self.module.log("unknown")
-
-                    if unit_state == "enabled":
-                        self.module.log("  disable")
-                        try:
-                            state = sd.disable([srv])
-                            self.module.log(f"   state: {state}")
-                        except UnitNotFoundError:
-                            self.module.log("unknown")
-
-        return result_state
+        changed = unmasked or enabled
 
         return dict(
-            failed=False,
-            msg="all monolithic service stopped and disabled."
+            changed=changed,
+            unmasked=unmasked,
+            enabled=enabled,
+            msg="enabled" if changed else "already enabled",
         )
 
+    def _disable_one(self, sd, name: str, unit, **_) -> dict:
+        """ """
+        stopped = False
+        disabled = False
 
-    def start(self):
-        """
-        """
-        pass
+        if unit.active_state == "active":
+            sd.stop(name)
+            stopped = True
 
-    def stop(self):
-        """
-        """
-        pass
+        if unit.is_enabled:
+            sd.disable([name])
+            disabled = True
 
-    def any_effectively_enabled(self, d: dict[str, dict[str, str]]) -> bool:
+        changed = stopped or disabled
 
-        enabled_states = {"enabled", "enabled-runtime", "linked", "linked-runtime", "alias"}
+        return dict(
+            changed=changed,
+            stopped=stopped,
+            disabled=disabled,
+            msg="disabled" if changed else "already disabled",
+        )
 
-        return any((v.get("enabled") or "").lower() in enabled_states for v in d.values())
+    def _start_one(self, sd, name: str, unit, timeout: float = 60, **_) -> dict:
+        """ """
+        if unit.active_state == "active":
+            return dict(changed=False, msg="already running")
 
-    def systemd_services(self,
-            user_manager: bool = False,
-            services: list = [],
-            service_types: list = ["service", "socket", "timer"],
-            include_inactive: bool = True
-        ):
-        """
-        """
-        self.module.log(f"LibvirtService::systemd_services(user_manager: {user_manager}, services: {services}, service_types: {service_types}, include_inactive: {include_inactive})")
+        sd.start_wait(unit=name, timeout_sec=timeout)
 
-        service_matches = []
+        return dict(changed=True, msg="started")
 
-        with SystemdClient(user_manager=user_manager) as sd:
-            try:
-                service_matches = sd.match_units(
-                  patterns=services,
-                  types=service_types,
-                  include_inactive_files=include_inactive
-                )
-            except UnitNotFoundError:
-                self.module.log("unknown")
+    def _stop_one(self, sd, name: str, unit, **_) -> dict:
+        """ """
+        if unit.active_state != "active":
+            return dict(changed=False, msg="already stopped")
 
-        self.module.log(f"service_matches: {service_matches}")
+        sd.stop(name)
 
-        return service_matches
-
+        return dict(changed=True, msg="stopped")

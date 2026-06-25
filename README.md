@@ -22,20 +22,25 @@ Tested on
 ## Included content
 
 
-### Roles
+The collection provides one role per concern. They are designed to be combined
+in a fixed order — see [Using this collection](#using-this-collection).
 
-| Role                                                                       | Build State | Description |
-|:---------------------------------------------------------------------------| :---------: | :----       |
-| [bodsch.lvm.libvirt](./roles/libvirt/README.md)                            | [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-collection-kvm/libvirt.yml?branch=main)][libvirt] | Ansible role to configure libvirt. |
-
-[libvirt]: https://github.com/bodsch/ansible-collection-kvm/actions/workflows/libvirt.yml
+| Role | Description |
+| :-- | :-- |
+| [bodsch.kvm.libvirt](./roles/libvirt) | install libvirt and configure its daemons (monolithic `libvirtd` or modular `virt*d`) |
+| [bodsch.kvm.storage_pool](./roles/storage_pool) | manage libvirt storage pools |
+| [bodsch.kvm.network](./roles/network) | manage libvirt virtual networks |
+| [bodsch.kvm.base_images](./roles/base_images) | download base / cloud images (qcow2) into a storage pool |
+| [bodsch.kvm.instances](./roles/instances) | create and run KVM instances (VMs) from the base images |
 
 
 ### Modules
 
-| Name                      | Description |
-|:--------------------------|:----|
-|                           |     |
+| Name | Description |
+| :-- | :-- |
+| `bodsch.kvm.libvirtd_version` | detect the installed libvirtd version |
+| `bodsch.kvm.modular_services` | manage the modular libvirt daemons (`virt*d`) via systemd |
+| `bodsch.kvm.monolithic_services` | manage the monolithic `libvirtd` via systemd |
 
 
 ## Installing this collection
@@ -70,6 +75,106 @@ pip install -r requirements.txt
 
 ## Using this collection
 
+The collection splits a KVM host into one role per concern. The roles are
+*consume-only* — each assumes the previous ones already ran — so they must be
+applied in this order:
+
+```text
+libvirt → storage_pool → network → base_images → instances
+```
+
+* **libvirt** — installs libvirt and configures its daemons. From libvirt 10 it
+  uses the modular `virt*d` daemons, below 10 the monolithic `libvirtd`. Override
+  with `libvirt_daemon_model: auto | monolithic | modular`. It publishes the
+  resolved model as the `ansible_local.libvirtd` fact, which the other roles read.
+* **storage_pool** — defines libvirt storage pools from `storage_pools`.
+* **network** — defines libvirt virtual networks from `virtual_networks`.
+* **base_images** — downloads qcow2 base / cloud images into a pool (`base_images`).
+* **instances** — clones the base images and creates the VMs (`instances`).
+
+### Variable contracts between the roles
+
+These names must line up across roles, otherwise VM creation fails late:
+
+| this … | … must match … |
+| :-- | :-- |
+| `instances_libvirt.pool`, `base_images_libvirt.pool` | a `storage_pools[].name` |
+| `instances_libvirt.network` | a `virtual_networks[].name` (use `state: active` so VMs can start) |
+| `instances_os_base_volumes[<os>]` | a `base_images[].dest` |
+| an instance's `os` | a `cloud_init_<os>.yaml.j2` template (ships `arch`, `debian`) |
+
+### Example
+
+A playbook that wires the whole chain:
+
+```yaml
+---
+- name: kvm host
+  hosts: kvm_hosts
+  become: true
+
+  roles:
+    - role: bodsch.kvm.libvirt
+    - role: bodsch.kvm.storage_pool
+    - role: bodsch.kvm.network
+    - role: bodsch.kvm.base_images
+    - role: bodsch.kvm.instances
+```
+
+with matching variables (e.g. in `group_vars`):
+
+```yaml
+---
+# libvirt daemon model (optional; default: auto)
+libvirt_daemon_model: auto
+
+# storage_pool
+storage_pools:
+  - name: pool
+    path: /var/lib/libvirt/pool
+    state: active
+    autostart: true
+
+# network
+virtual_networks:
+  - name: vm-network
+    mode: nat
+    bridge_name: virbr-vm
+    state: active
+    autostart: true
+    enable_dhcp: true
+    dhcp_gateway: "192.168.0.1"
+    dhcp_netmask: "255.255.255.0"
+    dhcp_scope_start: "192.168.0.2"
+    dhcp_scope_end: "192.168.0.254"
+network_domain_name: "example.lan"
+network_dns_primary: "192.168.0.1"
+network_dns_secondary: "1.1.1.1"
+
+# base_images (downloaded into the pool above; dest == the volume name)
+base_images:
+  - source: "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+    dest: "debian-12-base.qcow2"
+
+# instances
+instances_libvirt:
+  uri: "qemu:///system"
+  pool: "pool"               # = storage_pools[].name
+  network: "vm-network"      # = virtual_networks[].name
+instances_ssh_public_key: "ssh-ed25519 AAAA..."
+instances_os_base_volumes:
+  debian: "debian-12-base.qcow2"   # = base_images[].dest
+instances:
+  dns:
+    hostname: dns
+    os: debian                     # → cloud_init_debian.yaml.j2
+    vcpus: 1
+    memory_mb: 1024
+    os_disk_gb: 10
+    data_disks:
+      - { name: data0, size_gb: 20 }
+    ip: { prefix: "192.168.0", octet: 11 }
+```
 
 ## Contribution
 

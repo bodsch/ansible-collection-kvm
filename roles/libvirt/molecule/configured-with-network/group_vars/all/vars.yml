@@ -3,7 +3,7 @@
 libvirt_libvirtd:
   enable_tcp: true
   tcp_port: 16509
-  listen_addr: "{{ ansible_default_ipv4.address }}"
+  listen_addr: "{{ ansible_facts.default_ipv4.address }}"
   auth_unix_ro: "none"
   auth_unix_rw: "none"
   # https://libvirt.org/kbase/debuglogs.html#libvirt-daemons-logging-configuration
@@ -23,19 +23,5 @@ libvirt_libvirtd:
   log_outputs:
     - 2:file:/var/log/libvirt/libvirtd.log
     - 3:journald
-
-libvirt_storage_pools:
-  - name: pool
-    uuid: 4b39e9c3-b4b9-49b0-8ef9-9caa3d985410
-    path: /var/lib/libvirt/pool
-    autostart: true
-    state: active
-
-libvirt_virtual_networks:
-  - name: NATting
-    mode: bridge
-    bridge_name: br0
-    autostart: true
-    state: absent
 
 ...

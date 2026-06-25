@@ -1,0 +1,64 @@
+---
+
+- name: ensure storage pool target paths exist
+  become: true
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: u=rwx,g=rx,o=rx
+  loop: "{{ storage_pools }}"
+  loop_control:
+    label: "{{ item.path | default(item.name) }}"
+  when:
+    - item.path is defined
+    - item.state | default("present") != "absent"
+
+- name: ensure the libvirt storage daemon is available
+  become: true
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ ['virtqemud.socket', 'virtstoraged.socket'] if (storage_pool_use_modular | bool) else ['libvirtd.service'] }}"
+  loop_control:
+    label: "{{ item }}"
+  when:
+    - not ansible_check_mode
+    - ansible_facts.service_mgr | lower == "systemd"
+
+- name: define storage pools
+  become: true
+  community.libvirt.virt_pool:
+    command: define
+    name: "{{ item.name }}"
+    xml: "{{ lookup('template', 'pool.xml.j2') }}"
+  loop: "{{ storage_pools }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.state | default("present") != "absent"
+
+- name: set storage pool state
+  become: true
+  community.libvirt.virt_pool:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+  loop: "{{ storage_pools }}"
+  loop_control:
+    label: "{{ item.name }} -> {{ item.state }}"
+  when:
+    - item.state is defined
+
+- name: set storage pool autostart
+  become: true
+  community.libvirt.virt_pool:
+    name: "{{ item.name }}"
+    autostart: "{{ item.autostart | bool }}"
+  loop: "{{ storage_pools }}"
+  loop_control:
+    label: "{{ item.name }} -> autostart={{ item.autostart }}"
+  when:
+    - item.autostart is defined
+    - item.state | default("present") != "absent"
+
+...

@@ -1,0 +1,41 @@
+---
+
+instances_libvirt:
+  uri: "qemu:///system"
+  pool: "pool"                # provided by the storage_pool role (see libvirt.yml)
+  network: "vm-network"       # provided by the network role (see libvirt.yml)
+
+instances_ssh_public_key: "ssh-ed25519 AAAA...meinkey"
+
+# Base image volume per `os`. These volumes MUST already exist in the pool
+# (created out of band, e.g. via virt-manager or a separate playbook); molecule
+# does not download them.
+instances_os_base_volumes:
+  debian: "cirros-0.6.2.qcow2"
+  # arch: "archlinux-base.qcow2"
+
+# VMs as a list. `os` selects cloud_init_<os>.yaml.j2 and the
+# instances_os_base_volumes entry. `state` (running|defined) is optional.
+instances: []
+#   - hostname: "dns"
+#     vcpus: 1
+#     memory_mb: 1024
+#     os: "debian"
+#     ip:
+#       prefix: "192.168.0"
+#       octet: 11
+#     os_disk_gb: 10
+#     data_disks:
+#       - { name: "data0", size_gb: 20 }
+#       - { name: "logs", size_gb: 10 }
+#
+#   - hostname: "arch-ci"
+#     vcpus: 2
+#     memory_mb: 2048
+#     os: "arch"
+#     ip: { prefix: "192.168.0", octet: 42 }
+#     os_disk_gb: 20
+#     data_disks: []
+#     state: "defined"
+
+...

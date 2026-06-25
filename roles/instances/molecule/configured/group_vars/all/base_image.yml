@@ -1,0 +1,12 @@
+---
+
+base_images_libvirt:
+  uri: "qemu:///system"
+  pool: "pool"
+
+# tiny cirros image keeps the CI download cheap (~16 MB)
+base_images:
+  - source: "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
+    dest: "debian-13.qcow2"
+
+...

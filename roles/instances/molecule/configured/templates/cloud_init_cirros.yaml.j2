@@ -1,0 +1,15 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+#cloud-config
+# CirrOS is a test-only image (tiny, used here to keep CI cheap). It ships a
+# cut-down cloud-init: no package manager, no systemd, no qemu-guest-agent —
+# so this template only sets hostname and injects the SSH key.
+hostname: {{ hostname }}
+fqdn: {{ hostname }}.{{ domain }}
+
+ssh_pwauth: false
+disable_root: true
+
+users:
+  - name: cirros
+    ssh_authorized_keys:
+      - {{ ssh_public_key | quote }}

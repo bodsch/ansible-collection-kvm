@@ -1,0 +1,9 @@
+---
+
+instances_build_dependencies:
+  - base-devel
+  - diffutils
+  - fakeroot
+  - make
+
+...

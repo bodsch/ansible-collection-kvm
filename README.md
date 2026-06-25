@@ -165,8 +165,7 @@ instances_ssh_public_key: "ssh-ed25519 AAAA..."
 instances_os_base_volumes:
   debian: "debian-12-base.qcow2"   # = base_images[].dest
 instances:
-  dns:
-    hostname: dns
+  - hostname: dns
     os: debian                     # → cloud_init_debian.yaml.j2
     vcpus: 1
     memory_mb: 1024
@@ -174,7 +173,21 @@ instances:
     data_disks:
       - { name: data0, size_gb: 20 }
     ip: { prefix: "192.168.0", octet: 11 }
+    # state: running               # running | defined | shutdown | destroyed | paused
 ```
+
+`instances` is a list; each entry needs a unique `hostname` (also used as the
+libvirt domain name, override with `name`). The domain is always defined first,
+then `state` reconciles its run state on every run (default `running`,
+configurable via `instances_state`):
+
+| `state`     | effect                                                        |
+|-------------|---------------------------------------------------------------|
+| `running`   | start (or unpause) the domain                                 |
+| `defined`   | only define it; leave the current run state untouched         |
+| `shutdown`  | graceful ACPI shutdown (stops a running domain)               |
+| `destroyed` | forced power-off                                              |
+| `paused`    | pause (only takes effect if the domain is currently running)  |
 
 ## Contribution
 

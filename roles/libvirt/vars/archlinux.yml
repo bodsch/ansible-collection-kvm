@@ -12,6 +12,8 @@ libvirt_packages:
   - libvirt
   - libvirt-dbus
   - libvirt-python
+  - qemu-base          # provides /usr/bin/qemu-system-x86_64 and pulls in qemu-img
+  - qemu-ui-spice-core
 
 libvirt_service:
   name: libvirtd

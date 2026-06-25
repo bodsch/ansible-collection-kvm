@@ -1,0 +1,17 @@
+---
+
+# pool to import into, provisioned by storage_pool in prepare.yml
+# storage_pools:
+#   - name: pool
+#     path: /var/lib/libvirt/pool
+#     state: active
+#     autostart: true
+
+storage_pools:
+  - name: pool
+    uuid: 4b39e9c3-b4b9-49b0-8ef9-9caa3d985410
+    path: /var/lib/libvirt/pool
+    autostart: true
+    state: active
+
+...

@@ -3,17 +3,26 @@
 - name: assemble VM vars
   ansible.builtin.set_fact:
     vm: "{{ {
-      'key': vmitem.key,
-      'name': instances[vmitem.key].hostname,
-      'hostname': instances[vmitem.key].hostname,
-      'os': instances[vmitem.key].os | lower,
-      'vcpus': instances[vmitem.key].vcpus,
-      'memory_mb': instances[vmitem.key].memory_mb,
-      'os_disk_gb': instances[vmitem.key].os_disk_gb,
-      'data_disks': instances[vmitem.key].data_disks | default([]),
-      'ip_prefix': instances[vmitem.key].ip.prefix,
-      'ip_octet':  instances[vmitem.key].ip.octet
+      'name': vmitem.name | default(vmitem.hostname),
+      'hostname': vmitem.hostname,
+      'os': vmitem.os | lower,
+      'vcpus': vmitem.vcpus,
+      'memory_mb': vmitem.memory_mb,
+      'os_disk_gb': vmitem.os_disk_gb,
+      'data_disks': vmitem.data_disks | default([]),
+      'ip_prefix': vmitem.ip.prefix,
+      'ip_octet':  vmitem.ip.octet,
+      'state': vmitem.state | default(instances_state)
     } }}"
+
+- name: validate requested run state for "{{ vm.hostname }}"
+  ansible.builtin.assert:
+    that:
+      - vm.state in ['running', 'defined', 'shutdown', 'paused', 'destroyed']
+    fail_msg: >-
+      instance '{{ vm.hostname }}' has an invalid state '{{ vm.state }}';
+      expected one of: running, defined, shutdown, paused, destroyed
+    quiet: true
 
 - name: create OS disk by cloning base volume
   community.libvirt.virt_volume:
@@ -93,10 +102,18 @@
              'data_disk_letters': instances_data_disk_letters
            }) }}"
 
-- name: ensure VM running
+# Reconcile the run state against the config. The domain is already defined by
+# the task above, so here we only enforce its run state:
+#   running   -> start (or unpause)
+#   shutdown  -> graceful ACPI shutdown
+#   destroyed -> forced power-off
+#   paused    -> pause (only takes effect if the domain is currently running)
+#   defined   -> leave the current run state untouched (skip)
+- name: ensure instance run state "{{ vm.state }}"
   community.libvirt.virt:
     uri: "{{ instances_libvirt.uri }}"
     name: "{{ vm.name }}"
-    state: running
+    state: "{{ vm.state }}"
+  when: vm.state != 'defined'
 
 ...

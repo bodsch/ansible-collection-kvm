@@ -38,7 +38,9 @@
     </interface>
 
     <console type='pty'><target type='virtio' port='1'/></console>
+    {% if graphics_type | default('') and graphics_type != 'none' %}
     <graphics type='{{ graphics_type }}' autoport='yes'/>
+    {% endif %}
     <rng model='virtio'><backend model='random'>/dev/urandom</backend></rng>
   </devices>
 </domain>

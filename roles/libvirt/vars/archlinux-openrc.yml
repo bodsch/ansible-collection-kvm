@@ -8,6 +8,7 @@ libvirt_packages:
   - libvirt
   - libvirt-openrc
   - libvirt-python
+  - qemu-base          # provides /usr/bin/qemu-system-x86_64 and pulls in qemu-img
 
 libvirt_defaults_directory: "/etc/conf.d"
 

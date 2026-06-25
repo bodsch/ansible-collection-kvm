@@ -11,8 +11,9 @@
 
 - name: create instances
   ansible.builtin.include_tasks: instance.yml
-  loop: "{{ instances | dict2items }}"
+  loop: "{{ instances }}"
   loop_control:
     loop_var: vmitem
+    label: "{{ vmitem.hostname }}"
 
 ...

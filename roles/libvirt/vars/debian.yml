@@ -10,6 +10,7 @@ libvirt_packages:
   - libvirt-dbus
   - python3-libvirt
   - python3-dbus
-  # - qemu
+  - qemu-system-x86    # provides /usr/bin/qemu-system-x86_64
+  - qemu-utils         # provides qemu-img
 
 ...

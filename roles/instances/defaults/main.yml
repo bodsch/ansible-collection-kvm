@@ -7,6 +7,19 @@ instances_libvirt:
 
 instances_autostart: true
 
+# Default run state for instances that do not set their own `state`. The domain
+# is always defined first; `state` then reconciles its run state on every run:
+#   running   -> start (or unpause) the domain
+#   defined   -> only define it; leave the current run state untouched
+#   shutdown  -> graceful ACPI shutdown (stops a running domain)
+#   destroyed -> forced power-off
+#   paused    -> pause (only takes effect if the domain is currently running)
+instances_state: running
+
+# Graphics/console for the VM. type: spice | vnc | none ("none" or "" renders a
+# headless domain with no <graphics> element — useful for CI / serial-only VMs).
+# spice requires the qemu SPICE display backend (e.g. qemu-ui-spice-core on Arch);
+# vnc is built into qemu-base and needs no extra package.
 instances_graphics:
   type: "spice"
 
@@ -18,11 +31,15 @@ instances_os_base_volumes: {}
 #   debian: debian-12-base.qcow2
 #   arch: archlinux-base.qcow2
 
-# Instances to create, keyed by an internal identifier. The `os` value selects
-# both cloud_init_<os>.yaml.j2 and the instances_os_base_volumes entry.
-instances: {}
-#   dns:
-#     hostname: dns
+# Instances to create, as a list. The `os` value selects both
+# cloud_init_<os>.yaml.j2 and the instances_os_base_volumes entry.
+# Per-instance keys:
+#   hostname  (required) guest hostname; also the libvirt domain name
+#   name      (optional) override the libvirt domain name (default: hostname)
+#   state     (optional) running | defined | shutdown | destroyed | paused
+#             (default: instances_state)
+instances: []
+#   - hostname: dns
 #     os: debian
 #     vcpus: 1
 #     memory_mb: 1024
@@ -30,5 +47,13 @@ instances: {}
 #     data_disks:
 #       - { name: data0, size_gb: 20 }
 #     ip: { prefix: "192.168.0", octet: 11 }
+#     state: running
+#   - hostname: build
+#     os: arch
+#     vcpus: 2
+#     memory_mb: 2048
+#     os_disk_gb: 20
+#     ip: { prefix: "192.168.0", octet: 12 }
+#     state: defined          # only define, do not start
 
 ...

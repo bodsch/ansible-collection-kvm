@@ -24,27 +24,4 @@ libvirt_libvirtd:
     - 2:file:/var/log/libvirt/libvirtd.log
     - 3:journald
 
-storage_pools:
-  - name: pool
-    uuid: 4b39e9c3-b4b9-49b0-8ef9-9caa3d985410
-    path: /var/lib/libvirt/pool
-    autostart: true
-    state: active
-
-virtual_networks:
-  - name: vm-network
-    mode: nat
-    bridge_name: virbr-vm
-    autostart: true
-    state: active
-    enable_dhcp: true
-    dhcp_gateway: "192.168.0.1"
-    dhcp_netmask: "255.255.255.0"
-    dhcp_scope_start: "192.168.0.2"
-    dhcp_scope_end: "192.168.0.254"
-
-network_domain_name: "matrix.lan"
-network_dns_primary: "192.168.0.1"
-network_dns_secondary: "1.1.1.1"
-
 ...

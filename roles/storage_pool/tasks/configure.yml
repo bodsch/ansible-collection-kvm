@@ -26,39 +26,11 @@
     - not ansible_check_mode
     - ansible_facts.service_mgr | lower == "systemd"
 
-- name: define storage pools
+# Define each pool, reconcile its run state (present|active|inactive|absent) and
+# autostart in a single call. The 'path' key maps to the module's 'target_path'.
+- name: reconcile storage pools
   become: true
-  community.libvirt.virt_pool:
-    command: define
-    name: "{{ item.name }}"
-    xml: "{{ lookup('template', 'pool.xml.j2') }}"
-  loop: "{{ storage_pools }}"
-  loop_control:
-    label: "{{ item.name }}"
-  when:
-    - item.state | default("present") != "absent"
-
-- name: set storage pool state
-  become: true
-  community.libvirt.virt_pool:
-    name: "{{ item.name }}"
-    state: "{{ item.state }}"
-  loop: "{{ storage_pools }}"
-  loop_control:
-    label: "{{ item.name }} -> {{ item.state }}"
-  when:
-    - item.state is defined
-
-- name: set storage pool autostart
-  become: true
-  community.libvirt.virt_pool:
-    name: "{{ item.name }}"
-    autostart: "{{ item.autostart | bool }}"
-  loop: "{{ storage_pools }}"
-  loop_control:
-    label: "{{ item.name }} -> autostart={{ item.autostart }}"
-  when:
-    - item.autostart is defined
-    - item.state | default("present") != "absent"
+  bodsch.kvm.libvirt_pool:
+    pools: "{{ storage_pools }}"
 
 ...

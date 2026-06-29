@@ -21,7 +21,135 @@ class FilterModule(object):
             "modular_daemons": self.modular_daemons,
             "modular_daemons_off": self.modular_daemons_off,
             "libvirt_proxy_daemons": self.libvirt_proxy_daemons,
+            "network_specs": self.network_specs,
+            "instance_volumes": self.instance_volumes,
+            "instance_disks": self.instance_disks,
         }
+
+    def instance_volumes(self, vm, os_base_volumes):
+        """
+        Volume specs for bodsch.kvm.libvirt_volume: the cloned OS disk plus one
+        empty data disk per entry in C(vm.data_disks).
+        """
+        display.v(f"instance_volumes({vm}, {os_base_volumes})")
+
+        volumes = [{
+            "name": f"{vm['name']}-os.qcow2",
+            "capacity": vm["os_disk_gb"],
+            "clone_source": os_base_volumes[vm["os"]],
+        }]
+
+        for disk in vm.get("data_disks", []):
+            volumes.append({
+                "name": f"{vm['name']}-{disk['name']}.qcow2",
+                "capacity": disk["size_gb"],
+            })
+
+        return volumes
+
+    def instance_disks(self, vm, pool_path, root_disk_bus="virtio",
+                       cdrom_bus="sata", data_disk_letters=None):
+        """
+        Disk device specs for bodsch.kvm.libvirt_domain: OS disk on C(vda), one
+        data disk per C(vm.data_disks) (vdb, vdc, ...), and the cloud-init seed
+        ISO as a read-only cdrom. Mirrors the former vm.xml.j2 device layout.
+        """
+        display.v(f"instance_disks({vm}, {pool_path})")
+
+        letters = data_disk_letters or ["b", "c", "d", "e", "f", "g", "h", "i"]
+
+        disks = [{
+            "source": f"{pool_path}/{vm['name']}-os.qcow2",
+            "target_dev": "vda",
+            "bus": root_disk_bus,
+        }]
+
+        for index, disk in enumerate(vm.get("data_disks", [])):
+            disks.append({
+                "source": f"{pool_path}/{vm['name']}-{disk['name']}.qcow2",
+                "target_dev": f"vd{letters[index]}",
+                "bus": "virtio",
+            })
+
+        disks.append({
+            "source": f"{pool_path}/{vm['name']}-cidata.iso",
+            "target_dev": "sda",
+            "device": "cdrom",
+            "bus": cdrom_bus,
+        })
+
+        return disks
+
+    def network_specs(self, networks, domain=None, dns_primary=None, dns_secondary=None):
+        """
+        Translate the role's flat ``virtual_networks`` items into the nested
+        parameter schema of the bodsch.kvm.libvirt_network module.
+
+        The role keeps its existing public data model (flat C(enable_dhcp) /
+        C(dhcp_*) keys plus the role-level domain / DNS variables); this filter
+        bridges it to the module's structured C(dns) / C(dhcp) sub-dicts and the
+        C(vlan_tag) / C(vlans) (with C(tags)) shape.
+        """
+        display.v(f"network_specs({networks}, {domain}, {dns_primary}, {dns_secondary})")
+
+        passthrough = ("state", "mode", "bridge_name", "route_device",
+                       "virtualport_type", "uuid", "autostart")
+
+        result = []
+
+        for net in networks:
+            spec = {"name": net["name"]}
+
+            for key in passthrough:
+                if key in net:
+                    spec[key] = net[key]
+
+            if net.get("enable_dhcp"):
+                spec["dhcp"] = {
+                    "gateway": net.get("dhcp_gateway"),
+                    "netmask": net.get("dhcp_netmask"),
+                    "range_start": net.get("dhcp_scope_start"),
+                    "range_end": net.get("dhcp_scope_end"),
+                }
+                if domain:
+                    spec["domain"] = domain
+                forwarders = [a for a in (dns_primary, dns_secondary) if a]
+                if forwarders:
+                    spec["dns"] = {"forwarders": forwarders}
+
+            if "vlan" in net:
+                spec["vlan_tag"] = net["vlan"]
+
+            if "vlans" in net:
+                spec["vlans"] = [self._vlan_portgroup(vl) for vl in net["vlans"]]
+
+            result.append(spec)
+
+        display.v(f"= result: {result}")
+
+        return result
+
+    def _vlan_portgroup(self, vl):
+        """
+        Map a role VLAN portgroup ({name, default, trunk, vlan}) to the module's
+        ({name, default, trunk, tags}) shape. For a non-trunk portgroup C(vlan)
+        is a single id; for a trunk it is a list of ids; a default portgroup may
+        omit C(vlan) entirely.
+        """
+        pg = {"name": vl["name"], "trunk": bool(vl.get("trunk", False))}
+
+        if vl.get("default"):
+            pg["default"] = True
+
+        raw = vl.get("vlan")
+        if raw is None:
+            pg["tags"] = []
+        elif pg["trunk"]:
+            pg["tags"] = list(raw)
+        else:
+            pg["tags"] = [raw]
+
+        return pg
 
     def security_drivers(self, data, default=["selinux", "apparmor"]):
         """ """

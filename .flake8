@@ -17,3 +17,8 @@ exclude =
 
 max-line-length = 195
 
+# Ansible modules keep their DOCUMENTATION/EXAMPLES/RETURN assignments above the
+# imports by convention, which trips E402 (module level import not at top).
+per-file-ignores =
+  plugins/modules/*.py:E402
+

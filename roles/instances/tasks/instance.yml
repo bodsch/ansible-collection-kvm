@@ -24,31 +24,12 @@
       expected one of: running, defined, shutdown, paused, destroyed
     quiet: true
 
-- name: create OS disk by cloning base volume
-  community.libvirt.virt_volume:
+# OS disk (cloned from the base image) and any data disks in one call.
+- name: create OS and data disks
+  bodsch.kvm.libvirt_volume:
     uri: "{{ instances_libvirt.uri }}"
     pool: "{{ instances_libvirt.pool }}"
-    command: create
-    clone_source: "{{ instances_os_base_volumes[vm.os] }}"
-    xml: |
-      <volume type='file'>
-        <name>{{ vm.name }}-os.qcow2</name>
-        <capacity unit='G'>{{ vm.os_disk_gb }}</capacity>
-        <target><format type='qcow2'/></target>
-      </volume>
-
-- name: create data disks
-  community.libvirt.virt_volume:
-    uri: "{{ instances_libvirt.uri }}"
-    pool: "{{ instances_libvirt.pool }}"
-    command: create
-    xml: |
-      <volume type='file'>
-        <name>{{ vm.name }}-{{ item.name }}.qcow2</name>
-        <capacity unit='G'>{{ item.size_gb }}</capacity>
-        <target><format type='qcow2'/></target>
-      </volume>
-  loop: "{{ vm.data_disks }}"
+    volumes: "{{ vm | bodsch.kvm.instance_volumes(instances_os_base_volumes) }}"
 
 # render cloud-init data (distro-specific)
 - name: render USERDATA
@@ -75,45 +56,40 @@
           nameservers:
             addresses: ["{{ vm.ip_prefix }}.1", "1.1.1.1"]
 
-- name: create cloud-init CIDATA ISO in pool
-  community.libvirt.virt_volume:
+- name: create cloud-init CIDATA seed ISO in pool
+  bodsch.kvm.libvirt_cloud_init_iso:
     uri: "{{ instances_libvirt.uri }}"
     pool: "{{ instances_libvirt.pool }}"
-    command: create_cidata_cdrom
-    name: "{{ vm.name }}-cidata.iso"
-    cloudinit_config:
-      METADATA: "{{ ci_metadata }}"
-      USERDATA: "{{ ci_userdata }}"
-      NETWORK_CONFIG: "{{ ci_netcfg }}"
+    images:
+      - name: "{{ vm.name }}-cidata.iso"
+        metadata: "{{ ci_metadata }}"
+        user_data: "{{ ci_userdata }}"
+        network_config: "{{ ci_netcfg }}"
 
-- name: define domain from XML
-  community.libvirt.virt:
-    uri: "{{ instances_libvirt.uri }}"
-    command: define
-    autostart: "{{ instances_autostart }}"
-    xml: "{{ lookup('template', 'vm.xml.j2',
-           template_vars={
-             'vm': vm,
-             'libvirt_network': instances_libvirt.network,
-             'pool_path': instances_pool_path,
-             'root_disk_bus': instances_root_disk_bus,
-             'cdrom_bus': instances_cdrom_bus,
-             'graphics_type': instances_graphics.type,
-             'data_disk_letters': instances_data_disk_letters
-           }) }}"
-
-# Reconcile the run state against the config. The domain is already defined by
-# the task above, so here we only enforce its run state:
+# Define the domain and reconcile its run state in one call. The domain is
+# always defined; `state` then enforces the run state:
 #   running   -> start (or unpause)
+#   defined   -> only define, leave the current run state untouched (-> present)
 #   shutdown  -> graceful ACPI shutdown
 #   destroyed -> forced power-off
 #   paused    -> pause (only takes effect if the domain is currently running)
-#   defined   -> leave the current run state untouched (skip)
-- name: ensure instance run state "{{ vm.state }}"
-  community.libvirt.virt:
+- name: define and reconcile instance "{{ vm.name }}" ({{ vm.state }})
+  bodsch.kvm.libvirt_domain:
     uri: "{{ instances_libvirt.uri }}"
-    name: "{{ vm.name }}"
-    state: "{{ vm.state }}"
-  when: vm.state != 'defined'
+    domains:
+      - name: "{{ vm.name }}"
+        state: "{{ 'present' if vm.state == 'defined' else vm.state }}"
+        domain_type: "{{ libvirt_domain_type }}"
+        memory_mb: "{{ vm.memory_mb }}"
+        vcpus: "{{ vm.vcpus }}"
+        autostart: "{{ instances_autostart }}"
+        disks: "{{ vm | bodsch.kvm.instance_disks(instances_pool_path, instances_root_disk_bus, instances_cdrom_bus, instances_data_disk_letters) }}"
+        interfaces:
+          - source: "{{ instances_libvirt.network }}"
+        graphics:
+          type: >-
+            {{ (instances_graphics.type | default('') | lower)
+               if (instances_graphics.type | default('') | lower) in ['spice', 'vnc']
+               else 'none' }}
 
 ...

@@ -13,40 +13,13 @@
     - not ansible_check_mode
     - ansible_facts.service_mgr | lower == "systemd"
 
-- name: define virtual networks
+# Define each network, reconcile its run state and autostart in a single call.
+# The role's flat virtual_networks data model (enable_dhcp / dhcp_* plus the
+# network-level domain/DNS variables) is bridged to the module's structured
+# dns/dhcp/vlans schema by the network_specs filter.
+- name: reconcile virtual networks
   become: true
-  community.libvirt.virt_net:
-    command: define
-    name: "{{ item.name }}"
-    xml: "{{ lookup('template', 'network.xml.j2') }}"
-  loop: "{{ virtual_networks }}"
-  loop_control:
-    label: "{{ item.name }}"
-  when:
-    - item.state | default("present") != "absent"
-
-- name: set virtual network state
-  become: true
-  community.libvirt.virt_net:
-    name: "{{ item.name }}"
-    state: "{{ item.state }}"
-  loop: "{{ virtual_networks }}"
-  loop_control:
-    label: "{{ item.name }} -> {{ item.state }}"
-  when:
-    - item.state is defined
-
-- name: set virtual network autostart
-  become: true
-  community.libvirt.virt_net:
-    name: "{{ item.name }}"
-    autostart: "{{ item.autostart | bool }}"
-  failed_when: false
-  loop: "{{ virtual_networks }}"
-  loop_control:
-    label: "{{ item.name }} -> autostart={{ item.autostart }}"
-  when:
-    - item.autostart is defined
-    - item.state | default("present") != "absent"
+  bodsch.kvm.libvirt_network:
+    networks: "{{ virtual_networks | bodsch.kvm.network_specs(network_domain_name, network_dns_primary, network_dns_secondary) }}"
 
 ...

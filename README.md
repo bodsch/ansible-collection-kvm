@@ -17,6 +17,25 @@ Tested on
 
 ## Requirements & Dependencies
 
+* `ansible-core` >= 2.15
+* The libvirt resource modules talk to libvirt through its Python bindings, so
+  every managed host needs:
+
+  | Python package | needed by | provided on Arch by |
+  | :-- | :-- | :-- |
+  | `libvirt-python` | all `libvirt_*` modules | `python-libvirt` |
+  | `pycdlib` | `bodsch.kvm.libvirt_cloud_init_iso` | `python-pycdlib` (AUR) |
+  | `PyYAML` | `bodsch.kvm.libvirt_cloud_init_iso` | `python-yaml` |
+
+  The `instances` role installs `pycdlib` in its `prepare.yml`; the others ship
+  with a standard libvirt install.
+
+* Collection dependencies (installed automatically by `ansible-galaxy`):
+  `ansible.utils`, `ansible.posix`, `community.general`, `bodsch.core`,
+  `bodsch.systemd`.
+
+> **There is no dependency on `community.libvirt`.** The collection ships its
+> own native modules (see [Modules](#modules)).
 
 
 ## Included content
@@ -36,11 +55,141 @@ in a fixed order — see [Using this collection](#using-this-collection).
 
 ### Modules
 
+The collection ships **native libvirt modules** — there is no dependency on
+`community.libvirt`. Compared to the freestyle-`xml` modules they replace, these:
+
+* take **structured, validated parameters** instead of raw XML — the XML is
+  built and checked by the module *before* it reaches the hypervisor;
+* accept a **list**, so a single task reconciles many resources without `loop`;
+* return aggregated, per-item results (and, where useful, resolved facts such as
+  a pool's target path).
+
+#### libvirt resource modules
+
+| Name | Replaces | Description |
+| :-- | :-- | :-- |
+| `bodsch.kvm.libvirt_volume` | `community.libvirt.virt_volume` (create/clone/delete) | manage storage volumes (clone from a base image, resize, delete) |
+| `bodsch.kvm.libvirt_pool` | `community.libvirt.virt_pool` | manage storage pools; returns each pool's resolved `path` as a fact |
+| `bodsch.kvm.libvirt_network` | `community.libvirt.virt_net` | manage virtual networks (mode, DHCP, DNS, VLAN portgroups) |
+| `bodsch.kvm.libvirt_domain` | `community.libvirt.virt` (define + run state) | manage domains/VMs from a structured subset (+ a `raw_xml` escape hatch) |
+| `bodsch.kvm.libvirt_cloud_init_iso` | `community.libvirt.virt_volume` (`create_cidata_cdrom`) | build a cloud-init NoCloud seed ISO and upload it as a volume |
+
+All five share a `uri` parameter and are part of the `bodsch.kvm.libvirt`
+[action group](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_module_defaults.html#module-defaults-groups),
+so a play can set the connection once:
+
+```yaml
+module_defaults:
+  group/bodsch.kvm.libvirt:
+    uri: "qemu+ssh://root@kvmhost/system"
+```
+
+#### daemon / host helpers
+
 | Name | Description |
 | :-- | :-- |
 | `bodsch.kvm.libvirtd_version` | detect the installed libvirtd version |
 | `bodsch.kvm.modular_services` | manage the modular libvirt daemons (`virt*d`) via systemd |
 | `bodsch.kvm.monolithic_services` | manage the monolithic `libvirtd` via systemd |
+
+#### Module examples
+
+`bodsch.kvm.libvirt_pool` — define a pool, make it active, and read its path:
+
+```yaml
+- name: storage pools
+  bodsch.kvm.libvirt_pool:
+    pools:
+      - name: default
+        state: active
+        target_path: /var/lib/libvirt/images
+        mode: "0711"
+        autostart: true
+  register: pools
+
+- ansible.builtin.debug:
+    var: pools.pools.default.path        # -> /var/lib/libvirt/images
+```
+
+`bodsch.kvm.libvirt_volume` — clone an OS disk and add a data disk in one task:
+
+```yaml
+- name: instance disks
+  bodsch.kvm.libvirt_volume:
+    pool: default
+    volumes:
+      - name: web01-os.qcow2
+        capacity: 20                     # GiB (override with `unit`)
+        clone_source: debian-12-base.qcow2
+      - name: web01-data.qcow2
+        capacity: 50
+      - name: old-scratch.qcow2
+        state: absent
+```
+
+`bodsch.kvm.libvirt_network` — a NATed network with DHCP and DNS:
+
+```yaml
+- name: virtual networks
+  bodsch.kvm.libvirt_network:
+    networks:
+      - name: vm-network
+        state: active
+        mode: nat                        # nat | route | bridge | private
+        bridge_name: virbr-vm
+        autostart: true
+        domain: example.lan
+        dns:
+          forwarders: ["192.168.0.1", "1.1.1.1"]
+        dhcp:
+          gateway: 192.168.0.1
+          netmask: 255.255.255.0
+          range_start: 192.168.0.2
+          range_end: 192.168.0.254
+```
+
+`bodsch.kvm.libvirt_cloud_init_iso` — build a seed ISO for cloud-init:
+
+```yaml
+- name: cloud-init seed
+  bodsch.kvm.libvirt_cloud_init_iso:
+    pool: default
+    images:
+      - name: web01-cidata.iso
+        metadata:
+          local-hostname: web01
+        user_data: "{{ lookup('template', 'cloud_init_debian.yaml.j2') }}"
+        network_config:
+          version: 2
+          ethernets:
+            eth0:
+              addresses: ["192.168.0.11/24"]
+```
+
+`bodsch.kvm.libvirt_domain` — define and run a VM (structured), plus the
+`raw_xml` escape hatch for everything outside the modelled subset:
+
+```yaml
+- name: instances
+  bodsch.kvm.libvirt_domain:
+    domains:
+      - name: web01
+        state: running                  # present | running | shutdown | paused | destroyed | absent
+        memory_mb: 2048
+        vcpus: 2
+        autostart: true
+        disks:
+          - { source: /var/lib/libvirt/images/web01-os.qcow2, target_dev: vda }
+          - { source: /var/lib/libvirt/images/web01-cidata.iso, target_dev: sda, device: cdrom, bus: sata }
+        interfaces:
+          - { source: vm-network }       # type defaults to "network"
+        graphics:
+          type: spice                    # spice | vnc | none
+
+      - name: special
+        state: present
+        raw_xml: "{{ lookup('template', 'special-domain.xml.j2') }}"
+```
 
 
 ## Installing this collection

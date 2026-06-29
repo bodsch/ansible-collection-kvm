@@ -1,0 +1,20 @@
+---
+
+# Minimum ansible-core. The modules rely on sub-option argument-spec validation
+# (options/elements with required_if), which is well supported from 2.15 on.
+requires_ansible: ">=2.15.0"
+
+# Group the libvirt-facing modules so a play can set their shared connection
+# parameters once via module_defaults, e.g.:
+#
+#   module_defaults:
+#     group/bodsch.kvm.libvirt:
+#       uri: "qemu+ssh://root@kvmhost/system"
+#
+action_groups:
+  libvirt:
+    - libvirt_volume
+    - libvirt_pool
+    - libvirt_network
+    - libvirt_domain
+    - libvirt_cloud_init_iso

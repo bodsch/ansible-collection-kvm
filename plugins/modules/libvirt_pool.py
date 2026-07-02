@@ -7,6 +7,22 @@
 
 from __future__ import absolute_import, division, print_function
 
+import traceback
+
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
+from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_connection import (
+    HAS_LIBVIRT,
+    LIBVIRT_IMPORT_ERROR,
+    LibvirtConnection,
+    LibvirtConnectionError,
+)
+from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_xml import (
+    PoolXMLBuilder,
+    XMLValidationError,
+    pool_target_path,
+)
+
 DOCUMENTATION = r"""
 ---
 module: libvirt_pool
@@ -158,22 +174,6 @@ pools:
       persistent: true
       uuid: "a1b2c3d4-0000-0000-0000-000000000000"
 """
-
-import traceback
-
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
-from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_connection import (
-    HAS_LIBVIRT,
-    LIBVIRT_IMPORT_ERROR,
-    LibvirtConnection,
-    LibvirtConnectionError,
-)
-from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_xml import (
-    PoolXMLBuilder,
-    XMLValidationError,
-    pool_target_path,
-)
 
 if HAS_LIBVIRT:
     import libvirt

@@ -5,7 +5,9 @@ instances_libvirt:
   pool: "pool"                # provided by the storage_pool role (see libvirt.yml)
   network: "vm-network"       # provided by the network role (see libvirt.yml)
 
-instances_ssh_public_key: "ssh-ed25519 AAAA...meinkey"
+instances_ssh_public_keys:
+  - "ssh-ed25519 AAAA... meinkey"
+  - "ssh-rsa BBBB... otherkey"
 
 # headless: rely on the serial console, so no SPICE/VNC display is needed in CI.
 instances_graphics:
@@ -22,6 +24,7 @@ instances_os_base_volumes:
 # instances_os_base_volumes entry. `state` (running|defined) is optional.
 instances:
   - hostname: "dns"
+    domain: molecule.test
     vcpus: 1
     memory_mb: 1024
     os: "debian"
@@ -34,10 +37,11 @@ instances:
       - { name: "logs", size_gb: 10 }
 
   - hostname: "arch-ci"
+    domain: molecule.test
     vcpus: 2
     memory_mb: 2048
     os: "debian"
-    ip: { prefix: "192.168.0", octet: 42 }
+    ip: { prefix: "192.168.10", octet: 42 }
     os_disk_gb: 20
     data_disks: []
     state: "defined"          # only define, do not start (exercises instances_state override)

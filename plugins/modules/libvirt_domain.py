@@ -7,6 +7,23 @@
 
 from __future__ import absolute_import, division, print_function
 
+import traceback
+import xml.etree.ElementTree as ET
+
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
+from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_connection import (
+    HAS_LIBVIRT,
+    LIBVIRT_IMPORT_ERROR,
+    LibvirtConnection,
+    LibvirtConnectionError,
+)
+from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_xml import (
+    DOMAIN_STATE_NAMES,
+    DomainXMLBuilder,
+    XMLValidationError,
+)
+
 DOCUMENTATION = r"""
 ---
 module: libvirt_domain
@@ -252,23 +269,6 @@ domains:
       persistent: true
       run_state: running
 """
-
-import traceback
-import xml.etree.ElementTree as ET
-
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
-from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_connection import (
-    HAS_LIBVIRT,
-    LIBVIRT_IMPORT_ERROR,
-    LibvirtConnection,
-    LibvirtConnectionError,
-)
-from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_xml import (
-    DOMAIN_STATE_NAMES,
-    DomainXMLBuilder,
-    XMLValidationError,
-)
 
 if HAS_LIBVIRT:
     import libvirt

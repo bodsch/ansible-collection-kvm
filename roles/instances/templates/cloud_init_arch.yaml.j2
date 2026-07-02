@@ -1,13 +1,13 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 #cloud-config
 hostname: {{ hostname }}
-fqdn: {{ hostname }}.matrix.lan
+fqdn: {{ hostname }}.{{ domain }}
 manage_etc_hosts: true
 timezone: Europe/Berlin
 
 package_update: true
 package_upgrade: true
-packages: [qemu-guest-agent, curl, vim]
+packages: [qemu-guest-agent, curl, vim, nano, iproute2]
 
 ssh_pwauth: false
 disable_root: true
@@ -18,10 +18,14 @@ users:
     shell: /bin/bash
     sudo: "ALL=(ALL) NOPASSWD:ALL"
     lock_passwd: true
+{% if ssh_public_keys %}
     ssh_authorized_keys:
-      - {{ ssh_public_key | quote }}
+  {% for key in if ssh_public_keys %}
+      - {{ key | quote }}
+  {% endfor %}
+{% endif %}
 
 runcmd:
+  - systemctl enable --now qemu-guest-agent
   - systemctl enable --now systemd-networkd systemd-resolved
   - test -L /etc/resolv.conf || ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-  - systemctl enable --now qemu-guest-agent

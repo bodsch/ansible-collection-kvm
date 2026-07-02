@@ -23,7 +23,7 @@ instances_state: running
 instances_graphics:
   type: "spice"
 
-instances_ssh_public_key: ""
+instances_ssh_public_keys: []
 
 # Base image volume per instance `os` value. The referenced volumes must already
 # exist in instances_libvirt.pool (e.g. provisioned by the bodsch.kvm.base_images role).
@@ -40,6 +40,7 @@ instances_os_base_volumes: {}
 #             (default: instances_state)
 instances: []
 #   - hostname: dns
+#     domain: home.lab
 #     os: debian
 #     vcpus: 1
 #     memory_mb: 1024

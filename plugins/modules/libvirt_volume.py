@@ -7,6 +7,21 @@
 
 from __future__ import absolute_import, division, print_function
 
+import traceback
+
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
+from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_connection import (
+    HAS_LIBVIRT,
+    LIBVIRT_IMPORT_ERROR,
+    LibvirtConnection,
+    LibvirtConnectionError,
+)
+from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_xml import (
+    VolumeXMLBuilder,
+    XMLValidationError,
+)
+
 DOCUMENTATION = r"""
 ---
 module: libvirt_volume
@@ -144,21 +159,6 @@ state:
           key: /var/lib/libvirt/images/web01-os.qcow2
           capacity_bytes: 21474836480
 """
-
-import traceback
-
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
-from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
-from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_connection import (
-    HAS_LIBVIRT,
-    LIBVIRT_IMPORT_ERROR,
-    LibvirtConnection,
-    LibvirtConnectionError,
-)
-from ansible_collections.bodsch.kvm.plugins.module_utils.libvirt_xml import (
-    VolumeXMLBuilder,
-    XMLValidationError,
-)
 
 if HAS_LIBVIRT:
     import libvirt

@@ -4,6 +4,7 @@
   ansible.builtin.set_fact:
     vm: "{{ {
       'name': vmitem.name | default(vmitem.hostname),
+      'domain': vmitem.domain | default('home.kvm'),
       'hostname': vmitem.hostname,
       'os': vmitem.os | lower,
       'vcpus': vmitem.vcpus,
@@ -39,7 +40,7 @@
                 convert_data=True,
                 template_vars={
                   'hostname': vm.hostname,
-                  'domain': 'matrix.lan',
+                  'domain': vm.domain,
                   'ssh_public_key': instances_ssh_public_key
                 }) }}
 

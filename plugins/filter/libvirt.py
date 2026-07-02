@@ -31,7 +31,7 @@ class FilterModule(object):
         Volume specs for bodsch.kvm.libvirt_volume: the cloned OS disk plus one
         empty data disk per entry in C(vm.data_disks).
         """
-        display.v(f"instance_volumes({vm}, {os_base_volumes})")
+        display.v(f"bodsch.kvm.instance_volumes({vm}, os_base_volumes: {os_base_volumes})")
 
         volumes = [{
             "name": f"{vm['name']}-os.qcow2",
@@ -47,14 +47,23 @@ class FilterModule(object):
 
         return volumes
 
-    def instance_disks(self, vm, pool_path, root_disk_bus="virtio",
-                       cdrom_bus="sata", data_disk_letters=None):
+    def instance_disks(
+        self,
+        vm,
+        pool_path,
+        root_disk_bus="virtio",
+        cdrom_bus="sata",
+        data_disk_letters=None
+    ):
         """
         Disk device specs for bodsch.kvm.libvirt_domain: OS disk on C(vda), one
         data disk per C(vm.data_disks) (vdb, vdc, ...), and the cloud-init seed
         ISO as a read-only cdrom. Mirrors the former vm.xml.j2 device layout.
         """
-        display.v(f"instance_disks({vm}, {pool_path})")
+        display.v(
+            "bodsch.kvm.instance_disks("
+            f"{vm}, pool_path: {pool_path}, root_disk_bus: {root_disk_bus}, cdrom_bus: {cdrom_bus}, data_disk_letters: {data_disk_letters})"
+        )
 
         letters = data_disk_letters or ["b", "c", "d", "e", "f", "g", "h", "i"]
 
@@ -90,10 +99,11 @@ class FilterModule(object):
         bridges it to the module's structured C(dns) / C(dhcp) sub-dicts and the
         C(vlan_tag) / C(vlans) (with C(tags)) shape.
         """
-        display.v(f"network_specs({networks}, {domain}, {dns_primary}, {dns_secondary})")
+        display.v(f"bodsch.kvm.network_specs({networks}, domain: {domain}, dns_primary: {dns_primary}, dns_secondary: {dns_secondary})")
 
-        passthrough = ("state", "mode", "bridge_name", "route_device",
-                       "virtualport_type", "uuid", "autostart")
+        passthrough = (
+            "state", "mode", "bridge_name", "route_device",
+            "virtualport_type", "uuid", "autostart")
 
         result = []
 
@@ -153,7 +163,7 @@ class FilterModule(object):
 
     def security_drivers(self, data, default=["selinux", "apparmor"]):
         """ """
-        display.v(f"security_drivers({data}, {default}")
+        display.v(f"bodsch.kvm.security_drivers({data}, default: {default}")
 
         result = False
 
@@ -168,7 +178,7 @@ class FilterModule(object):
 
     def cgroup_controllers(self, data):
         """ """
-        display.v(f"security_drivers({data}")
+        display.v(f"bodsch.kvm.cgroup_controllers({data})")
 
         default = ["cpu", "devices", "memory", "blkio", "cpuset", "cpuacct"]
         result = []
@@ -203,7 +213,7 @@ class FilterModule(object):
             - virtstoraged - the host storage management daemon, in system or session mode
         """
         display.v(
-            f"modular_daemons({data}, only_sockets: {only_sockets}, only_services: {only_services})"
+            f"bodsch.kvm.modular_daemons({data}, only_sockets: {only_sockets}, only_services: {only_services})"
         )
 
         # The monolithic 'libvirtd' shares the same libvirt_services dict but is
@@ -250,6 +260,8 @@ class FilterModule(object):
         provide a read-only '-ro.socket'. The proxy daemon's -tcp/-tls sockets
         are configuration-dependent and handled by libvirt_proxy_daemons().
         """
+        display.v(f"bodsch.kvm.modular_socket_units({daemon}, no_ro_socket: {no_ro_socket})")
+
         units = [f"virt{daemon}d.socket"]
         if daemon not in no_ro_socket:
             units.append(f"virt{daemon}d-ro.socket")
@@ -266,7 +278,7 @@ class FilterModule(object):
         (both are shared with the monolithic libvirtd and must keep running).
         Used to disable the modular daemons when forcing the monolithic model.
         """
-        display.v(f"modular_daemons_off({data}, keep: {keep})")
+        display.v(f"bodsch.kvm.modular_daemons_off({data}, keep: {keep})")
 
         units = []
 
@@ -289,7 +301,7 @@ class FilterModule(object):
     ):
         """..."""
         display.v(
-            f"libvirt_proxy_daemons({data}, {config}, only_sockets: {only_sockets}, only_services: {only_services})"
+            f"bodsch.kvm.libvirt_proxy_daemons({data}, config: {config}, only_sockets: {only_sockets}, only_services: {only_services})"
         )
 
         daemons = []
@@ -326,7 +338,7 @@ class FilterModule(object):
         Filtert pro Top-Level-Key nur die Untermappings (z.B. 'socket'),
         deren 'enabled' True ist. Entfernt Top-Level-Keys ohne Treffer.
         """
-        display.v(f"only_enabled({d})")
+        display.v(f"bodsch.kvm.only_enabled({d})")
 
         result = {
             k: {
